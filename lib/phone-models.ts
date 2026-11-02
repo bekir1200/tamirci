@@ -1,0 +1,22 @@
+// Model suggestions are maintained here; free text remains available for unlisted devices.
+export const phoneModels: Record<string, string[]> = {
+  Apple: ["iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16 Plus", "iPhone 16", "iPhone 16e", "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15 Plus", "iPhone 15", "iPhone 14 Pro Max", "iPhone 14 Pro", "iPhone 14 Plus", "iPhone 14", "iPhone 13 Pro Max", "iPhone 13 Pro", "iPhone 13 mini", "iPhone 13", "iPhone 12 Pro Max", "iPhone 12 Pro", "iPhone 12 mini", "iPhone 12", "iPhone 11 Pro Max", "iPhone 11 Pro", "iPhone 11", "iPhone SE (2022)", "iPhone SE (2020)", "iPhone XS Max", "iPhone XS", "iPhone XR", "iPhone X", "iPhone 8 Plus", "iPhone 8", "iPhone 7 Plus", "iPhone 7"],
+  Samsung: ["Galaxy S25 Ultra", "Galaxy S25+", "Galaxy S25", "Galaxy S24 Ultra", "Galaxy S24+", "Galaxy S24", "Galaxy S24 FE", "Galaxy S23 Ultra", "Galaxy S23+", "Galaxy S23", "Galaxy S23 FE", "Galaxy S22 Ultra", "Galaxy S22+", "Galaxy S22", "Galaxy S21 Ultra", "Galaxy S21 FE", "Galaxy S21", "Galaxy A56", "Galaxy A55", "Galaxy A54", "Galaxy A53", "Galaxy A36", "Galaxy A35", "Galaxy A34", "Galaxy A26", "Galaxy A25", "Galaxy A16", "Galaxy A15", "Galaxy A14", "Galaxy A05", "Galaxy A05s", "Galaxy Z Fold6", "Galaxy Z Fold5", "Galaxy Z Flip6", "Galaxy Z Flip5", "Galaxy Note20 Ultra", "Galaxy Note20"],
+  Xiaomi: ["15 Ultra", "15 Pro", "15", "14 Ultra", "14T Pro", "14T", "14", "13T Pro", "13T", "13", "12T Pro", "12T", "12", "Mi 11", "Mi 10", "Redmi Note 14 Pro+", "Redmi Note 14 Pro", "Redmi Note 14", "Redmi Note 13 Pro+", "Redmi Note 13 Pro", "Redmi Note 13", "Redmi Note 12 Pro", "Redmi Note 12", "Redmi 14C", "Redmi 13C", "Redmi 12", "POCO X7 Pro", "POCO X7", "POCO X6 Pro", "POCO X6", "POCO F6 Pro", "POCO F6", "POCO M6 Pro"],
+  Huawei: ["Pura 70 Ultra", "Pura 70 Pro", "Pura 70", "P60 Pro", "P50 Pro", "P40 Pro", "P40 Lite", "P30 Pro", "P30 Lite", "Mate 60 Pro", "Mate 50 Pro", "Mate 40 Pro", "Mate 20 Lite", "nova 12", "nova 11", "nova 9", "Y9 Prime 2019", "Y7 2019"],
+  OPPO: ["Find X8 Pro", "Find X8", "Find X7 Ultra", "Find X5 Pro", "Reno13 Pro", "Reno13", "Reno12 Pro", "Reno12", "Reno11", "Reno10", "Reno8", "A98", "A78", "A58", "A38", "A18"],
+  vivo: ["X200 Pro", "X200", "X100 Pro", "X100", "V40", "V30", "V29", "V27", "Y100", "Y36", "Y35", "Y22s", "Y21"],
+  HONOR: ["Magic7 Pro", "Magic6 Pro", "Magic5 Pro", "200 Pro", "200", "90", "70", "X9c", "X9b", "X8b", "X7b", "X6b"],
+  realme: ["GT 7 Pro", "GT 6", "13 Pro+", "13 Pro", "12 Pro+", "12 Pro", "11 Pro+", "11 Pro", "C67", "C55", "C53", "C33"],
+  Google: ["Pixel 9 Pro XL", "Pixel 9 Pro", "Pixel 9", "Pixel 8 Pro", "Pixel 8", "Pixel 8a", "Pixel 7 Pro", "Pixel 7", "Pixel 7a", "Pixel 6 Pro", "Pixel 6a", "Pixel 6"],
+  OnePlus: ["13", "12", "11", "10 Pro", "Nord 4", "Nord 3", "Nord CE 4", "Open"],
+  Motorola: ["Edge 50 Ultra", "Edge 50 Pro", "Edge 50 Fusion", "Edge 40", "Moto G85", "Moto G84", "Moto G54", "Razr 50 Ultra", "Razr 50"],
+  Nokia: ["G42", "G22", "G21", "G20", "X30", "X20", "C32", "C21", "8.3", "7.2"],
+  Sony: ["Xperia 1 VI", "Xperia 1 V", "Xperia 5 V", "Xperia 10 VI", "Xperia 10 V"],
+  ASUS: ["ROG Phone 9 Pro", "ROG Phone 8 Pro", "Zenfone 11 Ultra", "Zenfone 10", "Zenfone 9"],
+  Infinix: ["Note 40 Pro", "Note 30", "Hot 40", "Hot 30", "Smart 8"],
+  Tecno: ["Camon 30 Pro", "Camon 30", "Spark 20 Pro", "Spark 20", "Pova 6"],
+  General_Mobile: ["GM 24 Pro", "GM 24", "GM 23", "GM 22 Pro", "GM 21"],
+  Vestel: ["Venus V7", "Venus Z40", "Venus E5"],
+  TCL: ["50 Pro", "40 SE", "30 SE"],
+};
