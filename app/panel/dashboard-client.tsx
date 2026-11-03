@@ -13,7 +13,7 @@ import {
   ChevronDown, ChevronLeft, ChevronRight, Clock3, FileText, Filter,
   BatteryCharging, CheckCircle2, ClipboardCheck, Headphones, MapPin, MapPinned,
   Menu, MoreHorizontal, Navigation, PackageCheck, Phone, Plus, Search, Settings2,
-  ShieldCheck, Smartphone, SlidersHorizontal, Truck, UserRound, Users, Wrench, X,
+  ReceiptText, ShieldCheck, Smartphone, SlidersHorizontal, Truck, UserRound, Users, Wrench, X,
 } from "lucide-react";
 
 type RequestStatus = "Yeni talep" | "Usta aranıyor" | "Teklif gönderildi" | "Atandı" | "Tamir sürüyor" | "Onay bekliyor" | "Parça bekliyor" | "Teslimata hazır" | "Tamamlandı" | "İptal edildi";
@@ -466,6 +466,7 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
           </> : screen === "technician" ? <>
             <button className={`nav-item ${technicianView === "current" ? "active" : ""}`} onClick={() => { setTechnicianView("current"); setMobileNav(false); }}><Wrench size={18} /><span>İşlerim</span></button>
             <button className={`nav-item ${technicianView === "history" ? "active" : ""}`} onClick={() => { setTechnicianView("history"); setMobileNav(false); }}><ClipboardCheck size={18} /><span>İş geçmişim</span></button>
+            <Link className="nav-item" href="/panel/faturalar" onClick={() => setMobileNav(false)}><FileText size={18} /><span>Faturalarım</span></Link>
             <button className="nav-item" onClick={() => { setMobileNav(false); setShowProfile(true); }}><UserRound size={18} /><span>Profilim</span></button>
           </> : screen === "courier" ? <>
             <button className={`nav-item ${courierView === "current" ? "active" : ""}`} onClick={() => { setCourierView("current"); setMobileNav(false); }}><PackageCheck size={18} /><span>Teslimatlarım</span></button>
@@ -473,6 +474,7 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
           </> : <>
             <button className="nav-item active" onClick={() => { setMobileNav(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}><Smartphone size={18} /><span>Cihazım</span></button>
             <button className="nav-item" onClick={() => goToPanel(".customer-event-history")}><FileText size={18} /><span>Talep geçmişi</span></button>
+            <Link className="nav-item" href="/panel/faturalar" onClick={() => setMobileNav(false)}><ReceiptText size={18} /><span>Faturalarım</span></Link>
           </>}
         </nav>
         {screen === "dispatch" && <>
@@ -481,6 +483,7 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
           <nav className="main-nav" aria-label="Yönetim menüsü">
             <button className="nav-item" onClick={() => goToPanel(".metric-grid")}><Activity size={18} /><span>Operasyon özeti</span></button>
             {role === "Admin" && <Link className="nav-item" href="/admin/users"><ShieldCheck size={18} /><span>Kullanıcı ve roller</span></Link>}
+            {role === "Admin" && <Link className="nav-item" href="/panel/faturalar"><ReceiptText size={18} /><span>Fatura ve maliyetler</span></Link>}
             <button className="nav-item" onClick={() => { setMobileNav(false); setShowProfile(true); }}><Settings2 size={18} /><span>Hesabım</span></button>
           </nav>
         </>}
