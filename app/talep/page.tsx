@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock3, ShieldCheck, Smartphone, Wrench } from "lucide-react";
@@ -77,8 +78,7 @@ export default function RepairRequestPage() {
     <main className="request-page">
       <header className="request-header">
         <Link className="landing-brand" href="/" aria-label="AloJetCep ana sayfa">
-          <span className="landing-brand-icon"><Wrench size={19} strokeWidth={2.4} /></span>
-          <span>AloJetCep<span className="landing-brand-dot">.</span></span>
+          <Image className="landing-brand-logo" src="/brand/alojetcep-logo.png" alt="AloJetCep" width={280} height={196} priority />
         </Link>
         <Link className="request-back" href="/"><ArrowLeft size={17} /> Ana sayfaya dön</Link>
       </header>

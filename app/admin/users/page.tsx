@@ -1,6 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, ShieldCheck, Wrench } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { AuthenticationRequiredError, PermissionDeniedError, getCurrentUser } from "@/lib/authorization";
 import { query } from "@/lib/db";
 import UserRoles from "./user-roles";
@@ -42,7 +43,7 @@ export default async function AdminUsersPage() {
   return (
     <main className="admin-users-page">
       <header className="admin-users-header">
-        <Link className="landing-brand" href="/panel"><span className="landing-brand-icon"><Wrench size={19}/></span><span>AloJetCep<span className="landing-brand-dot">.</span></span></Link>
+        <Link className="landing-brand" href="/panel"><Image className="landing-brand-logo" src="/brand/alojetcep-logo.png" alt="AloJetCep" width={280} height={196} /></Link>
         <Link className="admin-users-back" href="/panel"><ArrowLeft size={17}/> Panele dön</Link>
       </header>
       <section className="admin-users-main">

@@ -1,5 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle2, Wrench } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { authSetup, signIn } from "@/auth";
 import AuthForm from "./auth-form";
 
@@ -58,8 +59,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
     <main className="login-page">
       <header className="login-header">
         <Link className="landing-brand" href="/" aria-label="AloJetCep ana sayfa">
-          <span className="landing-brand-icon"><Wrench size={19} strokeWidth={2.4} /></span>
-          <span>AloJetCep<span className="landing-brand-dot">.</span></span>
+          <Image className="landing-brand-logo" src="/brand/alojetcep-logo.png" alt="AloJetCep" width={280} height={196} priority />
         </Link>
         <Link className="login-back" href="/"><ArrowLeft size={16} /> Ana sayfa</Link>
       </header>

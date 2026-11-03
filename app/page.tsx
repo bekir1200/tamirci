@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowDownRight, ArrowRight, BatteryCharging, Check, CheckCircle2,
@@ -15,8 +16,7 @@ export default function LandingPage() {
     <main className="landing-page">
       <header className="landing-header">
         <Link className="landing-brand" href="/" aria-label="AloJetCep ana sayfa">
-          <span className="landing-brand-icon"><Wrench size={19} strokeWidth={2.4} /></span>
-          <span>AloJetCep<span className="landing-brand-dot">.</span></span>
+          <Image className="landing-brand-logo" src="/brand/alojetcep-logo.png" alt="AloJetCep" width={280} height={196} priority />
         </Link>
         <nav className="landing-nav" aria-label="Ana menü">
           <a href="#nasil-calisir">Nasıl çalışır?</a>
@@ -80,7 +80,7 @@ export default function LandingPage() {
 
       <section className="landing-cta"><div><span className="section-kicker">CEPTAMİR YANINDA</span><h2>Telefonun için ilk adımı at.</h2><p>Talebini oluştur, gerisini birlikte takip edelim.</p></div><Link href="/talep" className="button-light">Ücretsiz talep oluştur <ArrowRight size={17} /></Link><div className="cta-decoration" /></section>
 
-      <footer className="landing-footer"><Link className="landing-brand footer-brand" href="/"><span className="landing-brand-icon"><Wrench size={17} /></span><span>AloJetCep<span className="landing-brand-dot">.</span></span></Link><span>Telefon tamirinde kolay ve şeffaf bir deneyim.</span><span>© 2026 AloJetCep</span></footer>
+      <footer className="landing-footer"><Link className="landing-brand footer-brand" href="/"><Image className="landing-brand-logo" src="/brand/alojetcep-logo.png" alt="AloJetCep" width={280} height={196} /></Link><span>Telefon tamirinde kolay ve şeffaf bir deneyim.</span><span>© 2026 AloJetCep</span></footer>
     </main>
   );
 }

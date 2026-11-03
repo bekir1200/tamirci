@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
@@ -453,7 +455,7 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
   return (
     <main className="app-shell">
       <aside className={`sidebar ${mobileNav ? "sidebar-open" : ""}`}>
-        <div className="brand"><div className="brand-mark"><Wrench size={19} strokeWidth={2.2} /></div><span>AloJet<span className="brand-light">Cep</span></span><button className="icon-button nav-close" aria-label="Menüyü kapat" onClick={() => setMobileNav(false)}><X size={18} /></button></div>
+        <div className="brand"><Image className="brand-mark-image" src="/brand/alojetcep-emblem.png" alt="" width={40} height={40} /><span>AloJet<span className="brand-light">Cep</span></span><button className="icon-button nav-close" aria-label="Menüyü kapat" onClick={() => setMobileNav(false)}><X size={18} /></button></div>
         <div className="workspace-label">{screen === "dispatch" ? role === "Admin" ? "YÖNETİM" : "OPERASYON" : screen === "technician" ? "USTA PANELİ" : screen === "courier" ? "KURYE PANELİ" : "MÜŞTERİ"}</div>
         <nav className="main-nav" aria-label="Ana menü">
           {screen === "dispatch" ? <>
