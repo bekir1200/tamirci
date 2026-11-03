@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { ArrowRight, LoaderCircle, UserRoundPlus } from "lucide-react";
+import { signInWithCredentials } from "./actions";
 
 type AuthFormProps = { mode: "login" | "register"; error?: string };
 
 const messages: Record<string, string> = {
   CredentialsSignin: "E-posta veya parola hatalı.",
+  MissingCSRF: "Giriş güvenlik doğrulaması yenilenemedi. Sayfayı yenileyip tekrar dene.",
   Configuration: "Giriş ayarları tamamlanmamış. Biraz sonra tekrar dene.",
   Default: "İşlem tamamlanamadı. Bilgilerini kontrol edip tekrar dene.",
 };
@@ -62,9 +63,9 @@ export default function AuthForm({ mode, error }: AuthFormProps) {
           return;
         }
         setSuccess(true);
-        const login = await signIn("credentials", { email, password, redirect: false });
-        if (login?.error) setMessage("Hesabın oluştu, ancak oturum açılamadı. Giriş sekmesinden devam et.");
-        else window.location.assign(redirectTarget());
+        const login = await signInWithCredentials({ email, password, redirectTo: redirectTarget() });
+        if (!login.ok) setMessage("Hesabın oluştu, ancak oturum açılamadı. Giriş sekmesinden devam et.");
+        else window.location.assign(login.redirectTo);
       } catch {
         setMessage("Sunucuya ulaşılamadı. Biraz sonra tekrar dene.");
       }
@@ -73,9 +74,9 @@ export default function AuthForm({ mode, error }: AuthFormProps) {
     }
 
     try {
-      const result = await signIn("credentials", { email, password, redirect: false });
-      if (result?.error) setMessage(messages[result.error] ?? messages.Default);
-      else window.location.assign(redirectTarget());
+      const result = await signInWithCredentials({ email, password, redirectTo: redirectTarget() });
+      if (!result.ok) setMessage(messages[result.error] ?? messages.Default);
+      else window.location.assign(result.redirectTo);
     } catch {
       setMessage("Sunucuya ulaşılamadı. Biraz sonra tekrar dene.");
     }

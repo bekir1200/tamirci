@@ -4,6 +4,8 @@ import { authSetup, signIn } from "@/auth";
 import AuthForm from "./auth-form";
 
 const errorMessages: Record<string, string> = {
+  CredentialsSignin: "E-posta veya parola hatalı.",
+  MissingCSRF: "Giriş güvenlik doğrulaması yenilenemedi. Sayfayı yenileyip tekrar dene.",
   AccessDenied: "Giriş isteği tamamlanmadı. Hesap izinlerini kontrol edip tekrar deneyebilirsin.",
   OAuthAccountNotLinked: "Bu e-posta başka bir giriş yöntemiyle kayıtlı. Destek ekibinden yardım al.",
   OAuthCallback: "Sağlayıcıdan dönüş alınamadı. Biraz sonra tekrar dene.",

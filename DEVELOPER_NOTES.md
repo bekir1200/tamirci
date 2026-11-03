@@ -17,6 +17,7 @@ Bu dosya dahili geliştirme notları içindir. Kullanıcı arayüzünde teknik k
 - Günlük site istatistikleri `daily_site_metrics` tablosunda yalnız toplu ziyaret oturumu ve başarılı giriş sayılarını tutar. Ziyaret sayacı tarayıcı sekmesi oturumu başına günde bir kez işler; IP veya sayfa gezinme geçmişi kaydetmez. Sayaç adminin `/admin/users` ekranında son 30 gün için görünür. Yeni tablo `007_daily_site_metrics.sql` ile eklenir.
 - E-posta doğrulama, parola sıfırlama ve giriş denemesi hız sınırı henüz yoktur.
 - Google ve Microsoft OAuth için gereken ortam değişkenleri ve callback adresleri `AUTH_SETUP.md` içindedir.
+- E-posta/parola girişi `app/giris/actions.ts` içindeki Auth.js Server Action yolunu kullanır. İstemciden doğrudan credentials callback’ine gönderim mobil tarayıcılarda `MissingCSRF` üretebildiği için girişte Server Action tercih edilir; Auth.js’in CSRF kontrollerini genel olarak kapatmayın.
 
 ## Ortam hazırlığı
 
