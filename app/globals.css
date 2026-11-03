@@ -1229,3 +1229,53 @@ h2 { font-size: 18px; }
 .sidebar .brand-light { color: #eceff1; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .landing-page a:focus-visible { outline-color: #ff3d00; }
 @media (max-width: 680px) { .delivery-grid { grid-template-columns: 1fr; } .delivery-panel { padding: 18px; } .delivery-panel .button { width: 100%; } }
+
+/* AloJetCep panel theme */
+.app-shell { background: var(--color-canvas); color: var(--color-ink); }
+.app-shell .sidebar { background: var(--color-sidebar); }
+.app-shell .nav-item { color: var(--color-sidebar-muted); }
+.app-shell .nav-item.active { background: #273044; color: #fff; box-shadow: inset 3px 0 var(--color-brand); }
+.app-shell .workspace-label { color: #cbd5e1; }
+.app-shell .help-icon { background: #273044; color: #ff9c80; }
+.app-shell .help-card span, .app-shell .profile-copy small { color: #cbd5e1; }
+.app-shell .presence-dot, .app-shell .live-indicator { background: var(--color-brand); box-shadow: none; }
+.app-shell .wave { color: var(--color-brand); }
+.app-shell .topbar, .app-shell .panel, .app-shell .metric-card, .app-shell .bottom-strip, .app-shell .modal { background: var(--color-surface); border-color: var(--color-line); }
+.app-shell h1, .app-shell h2, .app-shell h3, .app-shell .breadcrumbs strong, .app-shell .metric-value, .app-shell .selected-device strong, .app-shell .technician-name, .app-shell .customer-info strong, .app-shell .job-device-copy strong, .app-shell .work-order strong { color: var(--color-ink); }
+.app-shell .eyebrow, .app-shell .role-kicker, .app-shell .metric-top, .app-shell .metric-foot, .app-shell .page-heading p, .app-shell .role-panel-heading p, .app-shell .selected-meta, .app-shell .technician-details, .app-shell .manual-note, .app-shell .role-info-note { color: var(--color-muted); }
+.app-shell .button-primary { background: var(--color-brand); color: var(--color-ink); border-color: var(--color-brand); }
+.app-shell .button-primary:hover:not(:disabled) { background: var(--color-brand-dark); border-color: var(--color-brand-dark); color: #fff; }
+.app-shell .button-secondary { background: var(--color-surface); border-color: var(--color-line); color: var(--color-ink); }
+.app-shell .button-secondary:hover:not(:disabled) { background: var(--color-canvas); border-color: var(--color-muted); }
+.app-shell .button:disabled { opacity: .55; cursor: not-allowed; }
+.app-shell .avatar, .app-shell .device-icon, .app-shell .job-device-icon, .app-shell .fact-icon, .app-shell .history-icon, .app-shell .bottom-mark, .app-shell .metric-icon { background: var(--color-brand-soft); color: var(--color-brand-dark); }
+.app-shell .selected-request, .app-shell .technician-job-summary, .app-shell .technician-card.recommended, .app-shell .job-description, .app-shell .role-info-note, .app-shell .manual-note, .app-shell .delivery-item.is-selected { background: var(--color-canvas); border-color: var(--color-line); }
+.app-shell .matching-tabs button.tab-active, .app-shell .text-button, .app-shell .available, .app-shell .role-info-note svg { color: var(--color-brand-dark); }
+.app-shell .matching-tabs button.tab-active::after { background: var(--color-brand); }
+.app-shell .button-offer, .app-shell .button-sent, .app-shell .availability-toggle.is-available { background: var(--color-brand-soft); border-color: var(--color-brand-soft); color: var(--color-brand-dark); }
+.app-shell .availability-indicator, .app-shell .availability.available i { background: var(--color-brand); box-shadow: none; }
+.app-shell .status-new, .app-shell .status-search { background: var(--color-brand-soft); color: var(--color-brand-dark); }
+.app-shell .status-offer, .app-shell .status-assigned { background: var(--color-canvas); color: var(--color-ink); }
+.app-shell .row-selected { background: var(--color-brand-pale); box-shadow: inset 2px 0 var(--color-brand); }
+.app-shell .custody-chip, .app-shell .selected-custody, .app-shell .customer-custody { background: var(--color-canvas); color: var(--color-ink); border-color: var(--color-line); }
+.app-shell .pagination .page-current { background: var(--color-brand-soft); color: var(--color-brand-dark); }
+.app-shell :focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }
+.app-shell .request-table tbody tr.row-selected { background: var(--color-brand-pale); box-shadow: none; }
+.app-shell .request-table tbody tr.row-selected td:first-child { box-shadow: inset 3px 0 var(--color-brand); }
+.app-shell .customer-timeline-step.is-current > span, .app-shell .courier-step.step-current > span { border-color: var(--color-brand); background: var(--color-brand); color: var(--color-ink); box-shadow: 0 0 0 4px var(--color-brand-soft); }
+.app-shell .customer-timeline-step.is-done > span, .app-shell .courier-step.step-complete > span { border-color: var(--color-ink); background: var(--color-canvas); color: var(--color-ink); }
+.app-shell .customer-timeline-step.is-current strong, .app-shell .courier-step.step-current small { color: var(--color-brand-dark); }
+.admin-users-page { background: var(--color-canvas); color: var(--color-ink); }
+.admin-users-page .admin-user-avatar, .admin-users-page .admin-user-state.active, .admin-users-page .admin-users-notice { background: var(--color-brand-soft); color: var(--color-brand-dark); }
+.admin-users-page .admin-user-state.inactive { background: var(--color-canvas); color: var(--color-ink); }
+.admin-users-page .button-primary { background: var(--color-brand); border-color: var(--color-brand); color: var(--color-ink); }
+.admin-users-page .button-primary:hover:not(:disabled) { background: var(--color-brand-dark); color: #fff; }
+.admin-users-page :focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }
+.panel-request-picker { display: grid; gap: 8px; max-width: 460px; margin-bottom: 20px; color: var(--color-ink); font-size: 15px; font-weight: 700; }
+.panel-request-picker select { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid var(--color-line); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-ink); font-size: 16px; }
+.delivery-address { display: grid; gap: 8px; }
+.delivery-address textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--color-line); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-ink); font: inherit; font-size: 15px; resize: vertical; }
+.delivery-contact { display: grid; gap: 8px; margin: 18px 0; padding: 16px; border: 1px solid var(--color-line); border-radius: var(--radius-sm); background: var(--color-canvas); }
+.delivery-contact h3 { margin: 8px 0 0; color: var(--color-ink); font-size: 16px; }
+.delivery-contact p { margin: 0; color: var(--color-ink); overflow-wrap: anywhere; }
+.delivery-contact a { color: var(--color-brand-dark); font-weight: 700; }

@@ -11,7 +11,7 @@ async function main() {
 
   const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
   try {
-    for (const file of ["001_core.sql", "002_deliveries.sql", "003_imei.sql", "004_warranty.sql"]) {
+    for (const file of ["001_core.sql", "002_deliveries.sql", "003_imei.sql", "004_warranty.sql", "005_repair_notes.sql", "006_delivery_addresses.sql"]) {
       const migration = await readFile(resolve(process.cwd(), "database", file), "utf8");
       await pool.query("BEGIN");
       try {

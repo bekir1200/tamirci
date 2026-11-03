@@ -17,7 +17,7 @@ export async function GET() {
     if (user.role === "admin" || user.role === "staff") {
       const result = await query(
         `SELECT r.id, r.reference, r.customer_name, r.customer_phone, r.device, r.issue,
-                r.description, r.imei, r.warranty_status, r.warranty_expires_on, r.warranty_checked_at, r.city, r.district, r.status, r.priority, r.created_at,
+                r.description, r.repair_notes, r.imei, r.warranty_status, r.warranty_expires_on, r.warranty_checked_at, r.delivery_address, r.city, r.district, r.status, r.priority, r.created_at,
                 r.assigned_technician_id,
                 t.full_name AS technician_name,
                 d.status AS delivery_status, d.courier_id AS assigned_courier_id,
@@ -33,7 +33,7 @@ export async function GET() {
       const result = await query(
         `SELECT r.id, r.reference, r.customer_name,
                 CASE WHEN o.status = 'accepted' THEN r.customer_phone ELSE NULL END AS customer_phone,
-                r.device, r.issue, r.description, CASE WHEN o.status = 'accepted' THEN r.imei ELSE NULL END AS imei, r.city, r.district, r.status,
+                r.device, r.issue, r.description, CASE WHEN o.status = 'accepted' THEN r.repair_notes ELSE NULL END AS repair_notes, CASE WHEN o.status = 'accepted' THEN r.imei ELSE NULL END AS imei, CASE WHEN o.status = 'accepted' THEN r.delivery_address ELSE NULL END AS delivery_address, r.city, r.district, r.status,
                 r.assigned_technician_id, u.full_name AS technician_name,
                 d.status AS delivery_status, d.courier_id AS assigned_courier_id,
                 c.full_name AS assigned_courier_name,
@@ -42,7 +42,7 @@ export async function GET() {
          JOIN users u ON u.id = o.technician_id
          LEFT JOIN repair_deliveries d ON d.request_id = r.id
          LEFT JOIN users c ON c.id = d.courier_id
-         WHERE o.technician_id = $1 AND o.status IN ('pending', 'accepted')
+         WHERE o.technician_id = $1 AND o.status IN ('pending', 'accepted', 'declined', 'cancelled')
          ORDER BY o.created_at DESC LIMIT 100`,
         [user.id],
       );
@@ -51,7 +51,7 @@ export async function GET() {
     if (user.role === "customer") {
       const result = await query(
         `SELECT r.id, r.reference, r.customer_name, r.device, r.issue, r.city, r.district, r.status,
-                r.priority, r.description, r.imei, r.created_at, r.updated_at, r.assigned_technician_id,
+                r.priority, r.description, r.repair_notes, r.imei, r.delivery_address, r.created_at, r.updated_at, r.assigned_technician_id,
                 t.full_name AS technician_name, d.status AS delivery_status,
                 d.courier_id AS assigned_courier_id, c.full_name AS assigned_courier_name
          FROM repair_requests r LEFT JOIN users t ON t.id = r.assigned_technician_id
@@ -82,24 +82,35 @@ export async function POST(request: Request) {
     const district = typeof body.district === "string" ? body.district.trim() : "";
     const description = typeof body.description === "string" ? body.description.trim() : "";
     const imei = typeof body.imei === "string" ? body.imei.trim() : "";
+    const deliveryAddress = typeof body.deliveryAddress === "string" ? body.deliveryAddress.trim() : "";
+    const customerEmail = typeof body.customerEmail === "string" ? body.customerEmail.trim().toLowerCase() : "";
 
     if (imei && !/^\d{15}$/.test(imei)) return NextResponse.json({ error: "IMEI 15 rakamdan oluşmalı." }, { status: 400 });
+    if (customerEmail && (customerEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail))) return NextResponse.json({ error: "Geçerli bir müşteri e-postası gir." }, { status: 400 });
 
     if (customerName.length < 2 || customerName.length > 80 || phone.length < 10 || phone.length > 20 ||
         device.length < 2 || device.length > 120 || issue.length < 2 || issue.length > 80 ||
-        city.length < 2 || city.length > 50 || district.length < 2 || district.length > 50 || description.length > 500) {
+        city.length < 2 || city.length > 50 || district.length < 2 || district.length > 50 || description.length > 500 || deliveryAddress.length > 300) {
       return NextResponse.json({ error: "Bilgileri kontrol edip tekrar dene." }, { status: 400 });
     }
 
     const id = randomUUID();
     const reference = `CT-${randomBytes(3).toString("hex").toUpperCase()}`;
+    let customerUserId: string | null = user.role === "customer" ? user.id : null;
+    let linkedEmail: string | null = user.role === "customer" ? user.email : null;
+    if (user.role !== "customer" && customerEmail) {
+      const customer = await query<{ id: string; email: string }>(`SELECT id, email FROM users WHERE lower(email) = $1 AND role = 'customer' AND is_active = true`, [customerEmail]);
+      if (!customer.rows[0]) return NextResponse.json({ error: "Bu e-posta ile aktif bir müşteri hesabı bulunamadı." }, { status: 404 });
+      customerUserId = customer.rows[0].id;
+      linkedEmail = customer.rows[0].email;
+    }
     const created = await withTransaction(async (client) => {
       const result = await client.query(
         `INSERT INTO repair_requests
-          (id, reference, customer_user_id, customer_name, customer_email, customer_phone, device, issue, description, city, district, imei)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          (id, reference, customer_user_id, customer_name, customer_email, customer_phone, device, issue, description, city, district, imei, delivery_address)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
          RETURNING id, reference, status, created_at`,
-        [id, reference, user.role === "customer" ? user.id : null, customerName, user.role === "customer" ? user.email : null, phone, device, issue, description, city, district, imei || null],
+        [id, reference, customerUserId, customerName, linkedEmail, phone, device, issue, description, city, district, imei || null, deliveryAddress || null],
       );
       await client.query(
         `INSERT INTO repair_events (request_id, actor_id, event_type, to_status, details)

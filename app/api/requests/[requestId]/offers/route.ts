@@ -43,13 +43,13 @@ export async function POST(request: Request, context: RouteContext) {
         [requestId],
       );
       if (!repair.rows[0]) return { error: "Talep bulunamadı.", status: 404 } as const;
-      if (["cancelled", "completed"].includes(repair.rows[0].status)) return { error: "Bu talebe artık teklif gönderilemez.", status: 409 } as const;
+      if (!["new", "reviewing", "offered"].includes(repair.rows[0].status)) return { error: "Bu talebe artık teklif gönderilemez.", status: 409 } as const;
 
       const technician = await client.query(
-        `SELECT id FROM users WHERE id = $1 AND role = 'technician' AND is_active = true`,
+        `SELECT id FROM users WHERE id = $1 AND role = 'technician' AND is_active = true AND available = true`,
         [technicianId],
       );
-      if (!technician.rowCount) return { error: "Usta hesabı bulunamadı veya aktif değil.", status: 404 } as const;
+      if (!technician.rowCount) return { error: "Usta bulunamadı veya şu anda müsait değil.", status: 409 } as const;
 
       const offer = await client.query(
         `INSERT INTO repair_offers (id, request_id, technician_id, sent_by, message)

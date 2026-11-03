@@ -51,7 +51,7 @@ export default function RepairRequestPage() {
           customerName: name, phone: String(data.get("phone") ?? "").trim(),
           device: `${String(data.get("brand") ?? "")} ${String(data.get("model") ?? "")}`.trim(),
           issue: String(data.get("issue") ?? "").trim(), city: String(data.get("city") ?? "").trim(),
-          district: String(data.get("district") ?? "").trim(), description: String(data.get("description") ?? "").trim(), imei: String(data.get("imei") ?? "").trim(),
+          district: String(data.get("district") ?? "").trim(), description: String(data.get("description") ?? "").trim(), imei: String(data.get("imei") ?? "").trim(), deliveryAddress: String(data.get("deliveryAddress") ?? "").trim(),
         }),
       });
       const result = await response.json() as { request?: { reference?: string }; error?: string };
@@ -123,6 +123,7 @@ export default function RepairRequestPage() {
                   <label className="request-field"><span>Telefon numarası</span><input name="phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="05xx xxx xx xx" pattern="[+]?[0-9 ()-]{10,20}" title="Geçerli bir telefon numarası gir." required /></label>
                   <label className="request-field"><span>İl</span><input name="city" autoComplete="address-level1" placeholder="İl" maxLength={50} required /></label>
                   <label className="request-field"><span>İlçe</span><input name="district" autoComplete="address-level2" placeholder="İlçe" maxLength={50} required /></label>
+                  <label className="request-field request-field-full"><span>Cihazın alınacağı adres <small>Kurye istersen</small></span><textarea name="deliveryAddress" autoComplete="street-address" placeholder="Mahalle, sokak, bina ve daire" rows={3} maxLength={300} /></label>
                 </div>
               </div>
 

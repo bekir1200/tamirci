@@ -18,7 +18,7 @@ export default async function AdminUsersPage() {
   }
 
   const result = await query(
-    `SELECT id, full_name, email, role, shop_name, city, district, specialties, available, is_active, created_at
+    `SELECT id, full_name, email, role, shop_name, shop_address, shop_phone, city, district, specialties, available, is_active, created_at
      FROM users ORDER BY created_at DESC LIMIT 500`,
   );
 
@@ -32,7 +32,7 @@ export default async function AdminUsersPage() {
         <div className="admin-users-intro"><span className="request-eyebrow"><ShieldCheck size={16}/> YÖNETİM</span><h1>Kullanıcılar ve roller</h1><p>Kayıtlı kişilere görevlerine uygun erişim ver.</p></div>
         <UserRoles initialUsers={result.rows.map((row) => ({
           id: String(row.id), name: String(row.full_name), email: String(row.email), role: String(row.role),
-          shopName: row.shop_name ? String(row.shop_name) : "", city: row.city ? String(row.city) : "",
+          shopName: row.shop_name ? String(row.shop_name) : "", shopAddress: row.shop_address ? String(row.shop_address) : "", shopPhone: row.shop_phone ? String(row.shop_phone) : "", city: row.city ? String(row.city) : "",
           district: row.district ? String(row.district) : "", specialties: Array.isArray(row.specialties) ? row.specialties.map(String) : [],
           available: Boolean(row.available), isActive: Boolean(row.is_active),
         }))} adminId={admin.id}/>

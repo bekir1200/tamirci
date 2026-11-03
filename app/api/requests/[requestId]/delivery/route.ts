@@ -20,11 +20,12 @@ export async function POST(request: Request, context: RouteContext) {
 
     const outcome = await withTransaction(async (client) => {
       const repairResult = await client.query(
-        `SELECT id, reference, status FROM repair_requests WHERE id = $1 FOR UPDATE`, [requestId],
+        `SELECT id, reference, status, delivery_address FROM repair_requests WHERE id = $1 FOR UPDATE`, [requestId],
       );
       const repair = repairResult.rows[0];
       if (!repair) return { error: "Talep bulunamadı.", status: 404 } as const;
       if (["cancelled", "completed"].includes(repair.status)) return { error: "Tamamlanmış veya iptal edilmiş talebe kurye atanamaz.", status: 409 } as const;
+      if (!repair.delivery_address || repair.delivery_address.trim().length < 5) return { error: "Kurye atamadan önce cihazın alınacağı adresi kaydet.", status: 409 } as const;
 
       const courier = await client.query(
         `SELECT id FROM users WHERE id = $1 AND role = 'courier' AND is_active = true`, [courierId],

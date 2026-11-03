@@ -11,7 +11,7 @@ export async function GET() {
   try {
     await getCurrentUser(["admin"]);
     const result = await query(
-      `SELECT id, full_name, email, role, shop_name, city, district, specialties, available, is_active, created_at
+      `SELECT id, full_name, email, role, shop_name, shop_address, shop_phone, city, district, specialties, available, is_active, created_at
        FROM users ORDER BY created_at DESC LIMIT 500`,
     );
     return NextResponse.json({ users: result.rows });
@@ -34,6 +34,8 @@ export async function PATCH(request: Request) {
     const role = input.role as AppRole;
     const profile = input.profile && typeof input.profile === "object" ? input.profile as Record<string, unknown> : {};
     const shopName = typeof profile.shopName === "string" ? profile.shopName.trim().slice(0, 120) || null : null;
+    const shopAddress = typeof profile.shopAddress === "string" ? profile.shopAddress.trim().slice(0, 300) || null : null;
+    const shopPhone = typeof profile.shopPhone === "string" ? profile.shopPhone.trim().slice(0, 20) || null : null;
     const city = typeof profile.city === "string" ? profile.city.trim().slice(0, 50) || null : null;
     const district = typeof profile.district === "string" ? profile.district.trim().slice(0, 50) || null : null;
     const specialties = Array.isArray(profile.specialties)
@@ -55,10 +57,12 @@ export async function PATCH(request: Request) {
            city = CASE WHEN $2 IN ('technician', 'courier') THEN $4 ELSE city END,
            district = CASE WHEN $2 IN ('technician', 'courier') THEN $5 ELSE district END,
            specialties = CASE WHEN $2 = 'technician' THEN $6::text[] ELSE specialties END,
+           shop_address = CASE WHEN $2 = 'technician' THEN $7 ELSE shop_address END,
+           shop_phone = CASE WHEN $2 = 'technician' THEN $8 ELSE shop_phone END,
            updated_at = now()
          WHERE id = $1
-         RETURNING id, full_name, email, role, shop_name, city, district, specialties, available, is_active`,
-        [input.userId, role, shopName, city, district, specialties],
+         RETURNING id, full_name, email, role, shop_name, shop_address, shop_phone, city, district, specialties, available, is_active`,
+        [input.userId, role, shopName, city, district, specialties, shopAddress, shopPhone],
       );
       return { user: result.rows[0] } as const;
     });

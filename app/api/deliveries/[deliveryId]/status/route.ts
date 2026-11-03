@@ -18,7 +18,8 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     const outcome = await withTransaction(async (client) => {
       const selected = await client.query(
-        `SELECT d.id, d.request_id, d.courier_id, d.status AS delivery_status, r.status AS request_status
+        `SELECT d.id, d.request_id, d.courier_id, d.status AS delivery_status, r.status AS request_status, r.assigned_technician_id, r.delivery_address,
+                (SELECT shop_address FROM users WHERE id = r.assigned_technician_id) AS shop_address
          FROM repair_deliveries d JOIN repair_requests r ON r.id = d.request_id
          WHERE d.id = $1 FOR UPDATE OF d, r`,
         [deliveryId],
@@ -41,6 +42,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       if (target === "picked_up" && !["assigned", "accepted", "picked_up"].includes(current)) {
         return { error: "Cihaz teslim alınmadan sonraki aşamaya geçilemez.", status: 409 } as const;
       }
+      if (target === "picked_up" && (!delivery.delivery_address || !delivery.assigned_technician_id || !delivery.shop_address)) return { error: "Cihaz alınmadan önce müşteri adresi ve atanan ustanın atölye adresi tamamlanmalı.", status: 409 } as const;
       if (target === "at_shop" && !["picked_up", "at_shop"].includes(current)) {
         return { error: "Cihaz teslim alınmadan dükkâna ulaştı olarak işaretlenemez.", status: 409 } as const;
       }

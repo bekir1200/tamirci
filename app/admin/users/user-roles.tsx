@@ -5,7 +5,7 @@ import { LoaderCircle, Save, Shield } from "lucide-react";
 
 type UserRow = {
   id: string; name: string; email: string; role: string; shopName: string; city: string;
-  district: string; specialties: string[]; available: boolean; isActive: boolean;
+  district: string; shopAddress: string; shopPhone: string; specialties: string[]; available: boolean; isActive: boolean;
 };
 
 const roles = [
@@ -15,6 +15,7 @@ const roles = [
 
 export default function UserRoles({ initialUsers, adminId }: { initialUsers: UserRow[]; adminId: string }) {
   const [users, setUsers] = useState(initialUsers);
+  const [specialtyDrafts, setSpecialtyDrafts] = useState<Record<string, string>>(() => Object.fromEntries(initialUsers.map((user) => [user.id, user.specialties.join(", ")])));
   const [savingId, setSavingId] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -25,7 +26,7 @@ export default function UserRoles({ initialUsers, adminId }: { initialUsers: Use
       const response = await fetch("/api/admin/users", {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user.id, role: user.role, profile: {
-          shopName: user.shopName, city: user.city, district: user.district, specialties: user.specialties,
+          shopName: user.shopName, shopAddress: user.shopAddress, shopPhone: user.shopPhone, city: user.city, district: user.district, specialties: (specialtyDrafts[user.id] ?? "").split(",").map((item) => item.trim()).filter(Boolean).slice(0, 20),
         } }),
       });
       const result = await response.json() as { error?: string };
@@ -53,12 +54,14 @@ export default function UserRoles({ initialUsers, adminId }: { initialUsers: Use
             <label>Rol<select value={user.role} onChange={(event) => update(user.id, { role: event.target.value })}>{roles.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
             {user.role === "technician" && <>
               <label>Atölye adı<input value={user.shopName} maxLength={120} onChange={(event) => update(user.id, { shopName: event.target.value })} placeholder="Atölye adı"/></label>
+              <label>Atölye telefonu<input type="tel" value={user.shopPhone} maxLength={20} onChange={(event) => update(user.id, { shopPhone: event.target.value })} placeholder="Telefon numarası"/></label>
+              <label>Atölye adresi<input value={user.shopAddress} maxLength={300} onChange={(event) => update(user.id, { shopAddress: event.target.value })} placeholder="Açık adres"/></label>
               <label>Şehir<input value={user.city} maxLength={50} onChange={(event) => update(user.id, { city: event.target.value })} placeholder="İl"/></label>
               <label>İlçe<input value={user.district} maxLength={50} onChange={(event) => update(user.id, { district: event.target.value })} placeholder="İlçe"/></label>
-              <label className="admin-user-specialties">Uzmanlıklar<input value={user.specialties.join(", ")} maxLength={240} onChange={(event) => update(user.id, { specialties: event.target.value.split(",").map((item) => item.trim()).filter(Boolean).slice(0, 20) })} placeholder="Ekran, iPhone, Samsung"/></label>
+              <label className="admin-user-specialties">Uzmanlıklar<input value={specialtyDrafts[user.id] ?? ""} maxLength={240} onChange={(event) => setSpecialtyDrafts((current) => ({ ...current, [user.id]: event.target.value }))} placeholder="Ekran, iPhone, Samsung"/></label>
             </>}
           </div>
-          <div className="admin-user-actions"><small>{user.id === adminId ? "Yönetici hesabın" : "Rol değişikliği anında uygulanır"}</small><button className="button button-primary" onClick={() => void save(user)} disabled={savingId === user.id}>{savingId === user.id ? <LoaderCircle className="credentials-spinner" size={17}/> : <><Save size={16}/> Kaydet</>}</button></div>
+          <div className="admin-user-actions"><small>{user.id === adminId ? "Yönetici hesabın" : "Değişiklikler kaydedildiğinde uygulanır"}</small><button className="button button-primary" onClick={() => void save(user)} disabled={Boolean(savingId)}>{savingId === user.id ? <LoaderCircle className="credentials-spinner" size={17}/> : <><Save size={16}/> Kaydet</>}</button></div>
         </article>
       ))}
     </div>
