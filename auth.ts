@@ -3,6 +3,7 @@ import Google from "next-auth/providers/google";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import Credentials from "next-auth/providers/credentials";
 import { findOrCreateOAuthAccount, verifyLocalAccount } from "@/lib/credentials";
+import { recordDailyMetric } from "@/lib/analytics";
 
 const googleConfigured = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
 const microsoftConfigured = Boolean(
@@ -73,6 +74,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = token.role;
       }
       return session;
+    },
+  },
+  events: {
+    async signIn() {
+      try {
+        await recordDailyMetric("sign_ins");
+      } catch (error) {
+        console.error("Daily sign-in metric could not be recorded", error instanceof Error ? error.message : "Unknown error");
+      }
     },
   },
 });

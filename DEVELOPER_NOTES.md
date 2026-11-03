@@ -14,6 +14,7 @@ Bu dosya dahili geliştirme notları içindir. Kullanıcı arayüzünde teknik k
 - Kurye görevleri `repair_deliveries` tablosunda kalıcı tutulur. Admin/görevli aktif kuryeyi talebe atar; görev yalnız atanmış kurye veya admin tarafından durumlandırılır. Aşamalar `assigned → accepted → picked_up → at_shop → returning → delivered` şeklindedir.
 - Kurye konumu canlı paylaşılmaz; görev listesi ve mevcut teslimat aşaması kurye konumunun yerine geçmez. Tamir `ready_for_delivery` olmadan dönüş yolculuğu başlatılamaz; talep yalnız teslimat tamamlanınca `completed` olur.
 - Kurye ataması yalnız `assigned` veya `accepted` aşamasında değiştirilebilir. Talep başına tek teslimat döngüsü vardır; tamamlanan teslimat tekrar açılamaz.
+- Günlük site istatistikleri `daily_site_metrics` tablosunda yalnız toplu ziyaret oturumu ve başarılı giriş sayılarını tutar. Ziyaret sayacı tarayıcı sekmesi oturumu başına günde bir kez işler; IP veya sayfa gezinme geçmişi kaydetmez. Sayaç adminin `/admin/users` ekranında son 30 gün için görünür. Yeni tablo `007_daily_site_metrics.sql` ile eklenir.
 - E-posta doğrulama, parola sıfırlama ve giriş denemesi hız sınırı henüz yoktur.
 - Google ve Microsoft OAuth için gereken ortam değişkenleri ve callback adresleri `AUTH_SETUP.md` içindedir.
 
