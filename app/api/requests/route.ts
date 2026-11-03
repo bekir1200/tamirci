@@ -16,7 +16,7 @@ export async function GET() {
     const user = await getCurrentUser();
     if (user.role === "admin" || user.role === "staff") {
       const result = await query(
-        `SELECT r.id, r.reference, r.customer_name, r.customer_phone, r.device, r.issue,
+        `SELECT r.id, r.reference, r.customer_name, r.customer_email, r.customer_phone, r.device, r.issue,
                 r.description, r.repair_notes, r.imei, r.warranty_status, r.warranty_expires_on, r.warranty_checked_at, r.delivery_address, r.city, r.district, r.status, r.priority, r.created_at,
                 r.assigned_technician_id,
                 t.full_name AS technician_name,

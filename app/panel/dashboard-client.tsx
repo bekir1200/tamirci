@@ -460,8 +460,8 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
         <nav className="main-nav" aria-label="Ana menü">
           {screen === "dispatch" ? <>
             <button className="nav-item active" onClick={() => { setMobileNav(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}><Activity size={18} /><span>Genel Bakış</span></button>
-            <button className="nav-item" onClick={() => goToPanel(requests.length ? ".requests-panel" : ".request-empty-state")}><FileText size={18} /><span>Talepler</span><span className="nav-count">{requests.length}</span></button>
-            <button className="nav-item" onClick={() => goToPanel(".matching-panel")}><Users size={18} /><span>Ustalar</span><span className="presence-dot" /></button>
+            <Link className="nav-item" href="/panel/talepler" onClick={() => setMobileNav(false)}><FileText size={18} /><span>Talepler</span><span className="nav-count">{requests.length}</span></Link>
+            <Link className="nav-item" href="/panel/ustalar" onClick={() => setMobileNav(false)}><Users size={18} /><span>Ustalar</span><span className="presence-dot" /></Link>
             <button className="nav-item" onClick={() => goToPanel(".table-toolbar", true)}><Smartphone size={18} /><span>Müşteri ara</span></button>
           </> : screen === "technician" ? <>
             <button className={`nav-item ${technicianView === "current" ? "active" : ""}`} onClick={() => { setTechnicianView("current"); setMobileNav(false); }}><Wrench size={18} /><span>İşlerim</span></button>

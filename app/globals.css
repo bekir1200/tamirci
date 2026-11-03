@@ -1198,6 +1198,64 @@ h2 { font-size: 18px; }
 .billing-footnote { color: var(--color-muted); font-size: 13px; line-height: 1.6; }
 @media (max-width: 640px) { .billing-header { height: 60px; padding: 0 15px; }.billing-main { margin: 25px auto; padding: 0 14px 35px; }.billing-form-grid, .billing-cards { grid-template-columns: 1fr; }.billing-form-heading, .billing-list-heading { align-items: flex-start; padding: 16px; }.billing-form-grid { padding: 16px; }.billing-form > .button { width: calc(100% - 32px); margin: 0 16px 16px; }.billing-card-bottom { align-items: flex-start; } }
 
+.operations-page { min-height: 100vh; background: var(--color-canvas); color: var(--color-ink); }
+.operations-header { display: flex; height: 68px; align-items: center; justify-content: space-between; padding: 0 max(18px, calc((100% - 1280px) / 2)); border-bottom: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-muted); font-size: 14px; }
+.operations-header a { display: inline-flex; align-items: center; gap: 8px; color: var(--color-ink); font-weight: 700; text-decoration: none; }
+.operations-main { max-width: 1280px; margin: 34px auto; padding: 0 18px 50px; }
+.operations-title { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 24px; }
+.operations-title h1 { margin: 8px 0 6px; font-family: var(--font-display); font-size: clamp(28px, 4vw, 36px); letter-spacing: -.8px; }
+.operations-title p { margin: 0; color: var(--color-muted); font-size: 15px; line-height: 1.5; }
+.operations-title > .button { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+.operations-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.operations-toolbar label { display: flex; min-height: 48px; flex: 1; align-items: center; gap: 9px; padding: 0 13px; border: 1px solid var(--color-line); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-muted); }
+.operations-toolbar input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--color-ink); font: inherit; font-size: 15px; }
+.operations-toolbar > span { color: var(--color-muted); font-size: 14px; white-space: nowrap; }
+.operations-toolbar > .button { min-height: 46px; }
+.operations-grid { display: grid; grid-template-columns: minmax(320px, .95fr) minmax(0, 1.4fr); align-items: start; gap: 16px; }
+.operations-list, .operations-detail, .technician-directory-card { border: 1px solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-card); }
+.operations-list { display: grid; max-height: calc(100vh - 220px); overflow-y: auto; }
+.operations-row { display: flex; width: 100%; align-items: center; gap: 12px; padding: 15px; border: 0; border-bottom: 1px solid var(--color-line); background: transparent; color: var(--color-ink); font: inherit; text-align: left; cursor: pointer; }
+.operations-row:last-child { border-bottom: 0; }
+.operations-row:hover, .operations-row.is-selected { background: var(--color-brand-pale); }
+.operations-row-icon, .directory-avatar { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border-radius: 12px; background: var(--color-brand-soft); color: var(--color-brand-dark); }
+.operations-row-copy { display: grid; min-width: 0; flex: 1; gap: 4px; }
+.operations-row-copy strong, .operations-row-copy > span, .operations-row-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.operations-row-copy strong { font-size: 14px; }
+.operations-row-copy > span { color: var(--color-muted); font-size: 13px; }
+.operations-row-copy small { color: var(--color-soft); font-size: 12px; }
+.operations-pill { display: inline-flex; align-items: center; flex: 0 0 auto; padding: 5px 9px; border-radius: var(--radius-pill); background: var(--color-brand-soft); color: var(--color-brand-dark); font-size: 12px; font-weight: 700; }
+.operations-pill.is-done { background: var(--color-canvas); color: var(--color-ink); }
+.operations-detail { display: grid; gap: 15px; padding: 20px; }
+.operations-detail-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 13px; border-bottom: 1px solid var(--color-line); }
+.operations-detail-heading h2, .technician-profile h2 { margin: 6px 0 0; font-family: var(--font-display); font-size: 24px; }
+.operations-detail > h3 { margin: 0; font-size: 18px; }
+.operations-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.operations-facts p { display: grid; min-width: 0; gap: 5px; margin: 0; padding: 11px; border-radius: var(--radius-sm); background: var(--color-canvas); }
+.operations-facts p > strong { color: var(--color-muted); font-size: 12px; }
+.operations-facts p > span, .operations-facts p > a { display: inline-flex; align-items: center; gap: 6px; overflow-wrap: anywhere; color: var(--color-ink); font-size: 14px; text-decoration: none; }
+.operations-description { padding: 13px; border: 1px solid var(--color-line); border-radius: var(--radius-sm); }
+.operations-description > strong { font-size: 14px; }
+.operations-description p, .operations-history > p { margin: 6px 0 0; color: var(--color-muted); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.operations-history { display: grid; gap: 9px; }
+.operations-history h3 { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 15px; }
+.operations-history > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 10px; border-radius: var(--radius-sm); background: var(--color-canvas); font-size: 13px; }
+.operations-history > div > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.operations-history > div > small { flex: 0 0 auto; color: var(--color-soft); }
+.operations-history > div > strong { color: var(--color-brand-dark); white-space: nowrap; }
+.technician-directory { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 14px; }
+.technician-directory-card { display: grid; justify-items: start; gap: 9px; min-width: 0; padding: 17px; color: var(--color-ink); font: inherit; text-align: left; cursor: pointer; }
+.technician-directory-card:hover, .technician-directory-card.is-selected { border-color: var(--color-brand); box-shadow: 0 0 0 2px var(--color-brand-soft); }
+.technician-directory-card > strong { font-size: 16px; }
+.technician-directory-card > span:not(.operations-pill):not(.directory-avatar) { color: var(--color-muted); font-size: 14px; }
+.technician-directory-card .directory-jobs { color: var(--color-ink) !important; font-weight: 700; }
+.directory-specialties { min-height: 22px; }
+.technician-profile { grid-column: 1 / -1; }
+.technician-profile > p { margin: -10px 0 0; color: var(--color-muted); font-size: 15px; }
+.operations-empty { display: grid; min-height: 130px; grid-column: 1 / -1; place-items: center; padding: 20px; color: var(--color-muted); text-align: center; }
+.operations-error { margin: 0 0 14px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--color-brand-soft); color: var(--color-brand-dark); font-size: 14px; }
+@media (max-width: 900px) { .operations-grid { grid-template-columns: 1fr; }.operations-list { max-height: 45vh; }.technician-directory { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .operations-header { height: 60px; padding: 0 14px; }.operations-main { margin: 24px auto; padding: 0 13px 35px; }.operations-title { align-items: flex-start; flex-direction: column; }.operations-toolbar { flex-wrap: wrap; }.operations-toolbar label { flex-basis: 100%; }.operations-toolbar > span { margin-right: auto; }.operations-grid, .technician-directory { grid-template-columns: 1fr; }.operations-row { gap: 8px; padding: 12px 10px; }.operations-row-icon { width: 36px; height: 36px; }.operations-row-copy strong { font-size: 13px; }.operations-row-copy > span { font-size: 12px; }.operations-row-copy small { font-size: 11px; }.operations-pill { padding: 4px 7px; font-size: 11px; }.operations-detail { gap: 12px; padding: 15px; }.operations-facts { grid-template-columns: 1fr; }.technician-profile { grid-column: auto; } }
+
 .phone-combobox { position: relative; min-width: 0; }
 .request-field .phone-combobox input { padding-right: var(--space-8); }
 .phone-combobox-toggle { position: absolute; top: 0; right: 0; display: grid; width: 46px; height: 100%; max-height: 50px; place-items: center; border: 0; background: transparent; color: var(--color-muted); cursor: pointer; }
