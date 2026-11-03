@@ -52,13 +52,13 @@ export async function PATCH(request: Request) {
         if (input.userId === actor.id) return { error: "Kendi admin yetkini kaldıramazsın.", status: 409 } as const;
       }
       const result = await client.query(
-        `UPDATE users SET role = $2,
-           shop_name = CASE WHEN $2 = 'technician' THEN $3 ELSE shop_name END,
-           city = CASE WHEN $2 IN ('technician', 'courier') THEN $4 ELSE city END,
-           district = CASE WHEN $2 IN ('technician', 'courier') THEN $5 ELSE district END,
-           specialties = CASE WHEN $2 = 'technician' THEN $6::text[] ELSE specialties END,
-           shop_address = CASE WHEN $2 = 'technician' THEN $7 ELSE shop_address END,
-           shop_phone = CASE WHEN $2 = 'technician' THEN $8 ELSE shop_phone END,
+        `UPDATE users SET role = $2::varchar,
+           shop_name = CASE WHEN $2::varchar = 'technician' THEN $3 ELSE shop_name END,
+           city = CASE WHEN $2::varchar IN ('technician', 'courier') THEN $4 ELSE city END,
+           district = CASE WHEN $2::varchar IN ('technician', 'courier') THEN $5 ELSE district END,
+           specialties = CASE WHEN $2::varchar = 'technician' THEN $6::text[] ELSE specialties END,
+           shop_address = CASE WHEN $2::varchar = 'technician' THEN $7 ELSE shop_address END,
+           shop_phone = CASE WHEN $2::varchar = 'technician' THEN $8 ELSE shop_phone END,
            updated_at = now()
          WHERE id = $1
          RETURNING id, full_name, email, role, shop_name, shop_address, shop_phone, city, district, specialties, available, is_active`,
