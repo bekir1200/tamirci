@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function RequestsPage() {
   try {
     const user = await getCurrentUser(["admin", "staff"]);
-    return <OperationsClient mode="requests" role={user.role} />;
+    return <OperationsClient mode="requests" role={user.role} name={user.name} />;
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) redirect("/giris?next=%2Fpanel%2Ftalepler");
     if (error instanceof PermissionDeniedError) redirect("/panel");

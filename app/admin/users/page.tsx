@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { AuthenticationRequiredError, PermissionDeniedError, getCurrentUser } from "@/lib/authorization";
 import { query } from "@/lib/db";
 import UserRoles from "./user-roles";
+import PanelSidebar from "@/app/panel/panel-sidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -41,9 +41,8 @@ export default async function AdminUsersPage() {
   const todayMetrics = dailyMetrics.rows[0];
 
   return (
-    <main className="admin-users-page">
+    <div className="subpage-layout"><PanelSidebar role="admin" name={admin.name} active="users"/><main className="admin-users-page subpage-main">
       <header className="admin-users-header">
-        <Link className="landing-brand" href="/panel"><Image className="landing-brand-logo" src="/brand/alojetcep-logo.png" alt="AloJetCep" width={280} height={196} /></Link>
         <Link className="admin-users-back" href="/panel"><ArrowLeft size={17}/> Panele dön</Link>
       </header>
       <section className="admin-users-main">
@@ -61,6 +60,6 @@ export default async function AdminUsersPage() {
           available: Boolean(row.available), isActive: Boolean(row.is_active),
         }))} adminId={admin.id}/>
       </section>
-    </main>
+    </main></div>
   );
 }

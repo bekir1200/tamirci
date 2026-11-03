@@ -8,7 +8,7 @@ export default async function BillingPage() {
   try {
     const user = await getCurrentUser();
     if (!["admin", "technician", "customer"].includes(user.role)) redirect("/panel");
-    return <BillingClient role={user.role} />;
+    return <BillingClient role={user.role} name={user.name} />;
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) redirect("/giris?next=%2Fpanel%2Ffaturalar");
     throw error;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, FileText, LockKeyhole, Plus, ReceiptText, RefreshCw } from "lucide-react";
 import type { AppRole } from "@/types/next-auth";
+import PanelSidebar from "../panel-sidebar";
 
 type Bill = {
   id: string; request_id: string; reference: string; device: string; document_type: "customer_sale" | "technician_purchase";
@@ -17,7 +18,7 @@ const money = (value: string | number | null | undefined) => `${Number(value ?? 
 const docTypeLabel = (type: Bill["document_type"]) => type === "customer_sale" ? "Müşteri satış faturası" : "Usta hizmet faturası";
 const statusLabel: Record<string, string> = { draft: "Taslak", recorded: "Kaydedildi", sent: "Gönderildi", accepted: "Kabul edildi", rejected: "Reddedildi", cancelled: "İptal edildi" };
 
-export default function BillingClient({ role }: { role: AppRole }) {
+export default function BillingClient({ role, name }: { role: AppRole; name: string }) {
   const [bills, setBills] = useState<Bill[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [busy, setBusy] = useState(true);
@@ -63,7 +64,7 @@ export default function BillingClient({ role }: { role: AppRole }) {
   }
 
   const canRecord = role === "admin" || role === "technician";
-  return <main className="billing-page">
+  return <div className="subpage-layout"><PanelSidebar role={role} name={name} active="billing"/><main className="billing-page subpage-main">
     <header className="billing-header"><Link href="/panel"><ArrowLeft size={18}/> Panele dön</Link><span>AloJetCep · Finans</span></header>
     <div className="billing-main">
       <div className="billing-title"><span className="request-eyebrow"><ReceiptText size={15}/> FATURA VE HAKEDİŞ</span><h1>{role === "customer" ? "Faturalarım" : role === "technician" ? "Hizmet faturalarım" : "Fatura ve maliyet kayıtları"}</h1><p>{role === "customer" ? "AloJetCep tarafından düzenlenen satış faturalarını görüntüle." : role === "technician" ? "AloJetCep’e kestiğin hizmet faturalarını ve ilgili işlerini takip et." : "Müşteri satış faturalarını ve ustaların hizmet faturalarını iş emri bazında takip et."}</p></div>
@@ -92,5 +93,5 @@ export default function BillingClient({ role }: { role: AppRole }) {
       </section>
       <p className="billing-footnote">Gerçek e-Fatura/e-Arşiv gönderimi bu ekrana henüz bağlı değil. Entegratör bağlantısı yapıldığında belge numarası, gönderim sonucu ve dosya erişimi otomatik eşleştirilecek.</p>
     </div>
-  </main>;
+  </main></div>;
 }
