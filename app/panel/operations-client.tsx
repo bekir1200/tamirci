@@ -74,7 +74,7 @@ export default function OperationsClient({ mode, role, name }: { mode: "requests
   const filteredRequests = requests.filter((item) => `${item.reference} ${item.customer_name} ${item.device} ${item.issue} ${item.district} ${item.status}`.toLocaleLowerCase("tr-TR").includes(search.toLocaleLowerCase("tr-TR")));
   const filteredTechnicians = technicians.filter((item) => `${item.full_name} ${item.shop_name ?? ""} ${item.city ?? ""} ${item.district ?? ""} ${item.specialties.join(" ")}`.toLocaleLowerCase("tr-TR").includes(search.toLocaleLowerCase("tr-TR")));
 
-  return <div className="subpage-layout"><PanelSidebar role={role} name={name} active={mode}/><main className="operations-page subpage-main">
+  return <div className="subpage-layout app-shell"><PanelSidebar role={role} name={name} active={mode}/><main className="operations-page subpage-main">
     <header className="operations-header"><Link href="/panel"><ArrowLeft size={18}/> Panele dön</Link><span>AloJetCep · {role === "admin" ? "Admin" : "Görevli"}</span></header>
     <div className="operations-main">
       <div className="operations-title"><div><span className="request-eyebrow">{role === "admin" ? "YÖNETİM ALANI" : "OPERASYON ALANI"}</span><h1>{title}</h1><p>{mode === "requests" ? "Talepleri seç, müşteri ve cihaz bilgileriyle tam işlem geçmişini görüntüle." : "Usta profillerini, uzmanlıklarını, müsaitliklerini ve iş yüklerini incele."}</p></div><Link className="button button-secondary" href={mode === "requests" ? "/panel/ustalar" : "/panel/talepler"}>{mode === "requests" ? <><Users size={16}/> Ustaları aç</> : <><FileText size={16}/> Talepleri aç</>}</Link></div>

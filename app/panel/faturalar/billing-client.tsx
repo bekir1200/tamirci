@@ -64,7 +64,7 @@ export default function BillingClient({ role, name }: { role: AppRole; name: str
   }
 
   const canRecord = role === "admin" || role === "technician";
-  return <div className="subpage-layout"><PanelSidebar role={role} name={name} active="billing"/><main className="billing-page subpage-main">
+  return <div className="subpage-layout app-shell"><PanelSidebar role={role} name={name} active="billing"/><main className="billing-page subpage-main">
     <header className="billing-header"><Link href="/panel"><ArrowLeft size={18}/> Panele dön</Link><span>AloJetCep · Finans</span></header>
     <div className="billing-main">
       <div className="billing-title"><span className="request-eyebrow"><ReceiptText size={15}/> FATURA VE HAKEDİŞ</span><h1>{role === "customer" ? "Faturalarım" : role === "technician" ? "Hizmet faturalarım" : "Fatura ve maliyet kayıtları"}</h1><p>{role === "customer" ? "AloJetCep tarafından düzenlenen satış faturalarını görüntüle." : role === "technician" ? "AloJetCep’e kestiğin hizmet faturalarını ve ilgili işlerini takip et." : "Müşteri satış faturalarını ve ustaların hizmet faturalarını iş emri bazında takip et."}</p></div>

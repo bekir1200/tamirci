@@ -41,7 +41,7 @@ export default async function AdminUsersPage() {
   const todayMetrics = dailyMetrics.rows[0];
 
   return (
-    <div className="subpage-layout"><PanelSidebar role="admin" name={admin.name} active="users"/><main className="admin-users-page subpage-main">
+    <div className="subpage-layout app-shell"><PanelSidebar role="admin" name={admin.name} active="users"/><main className="admin-users-page subpage-main">
       <header className="admin-users-header">
         <Link className="admin-users-back" href="/panel"><ArrowLeft size={17}/> Panele dön</Link>
       </header>
