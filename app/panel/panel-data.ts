@@ -1,6 +1,6 @@
 // Panel veri dönüşümleri: API yanıtlarını arayüz modellerine çevirir ve olay metinlerini üretir.
 
-export type RequestStatus = "Yeni talep" | "Usta aranıyor" | "Teklif gönderildi" | "Atandı" | "Tamir sürüyor" | "Onay bekliyor" | "Parça bekliyor" | "Teslimata hazır" | "Tamamlandı" | "İptal edildi";
+export type RequestStatus = "Yeni talep" | "Usta aranıyor" | "Teklif gönderildi" | "Atandı" | "Teşhis yapılıyor" | "Görevli onayında" | "Müşteri onayladı" | "Tamir sürüyor" | "Onay bekliyor" | "Parça bekliyor" | "Teslimata hazır" | "Tamamlandı" | "İptal edildi";
 export type RepairRequest = {
   id: string; dbId: string; customer: string; customerPhone?: string; customerEmail?: string; initials: string; device: string; issue: string;
   district: string; created: string; status: RequestStatus; priority: "Normal" | "Acil";
@@ -19,7 +19,7 @@ export type RepairEvent = {
   technicianName?: string; reference: string; device: string; issue: string; createdAt: string;
 };
 export type Screen = "dispatch" | "technician" | "courier" | "customer";
-export type TechnicianJobStatus = "offer" | "accepted" | "repairing" | "approval" | "parts" | "completed" | "declined" | "cancelled" | "offer_closed";
+export type TechnicianJobStatus = "offer" | "accepted" | "diagnosing" | "review" | "approved" | "repairing" | "approval" | "parts" | "completed" | "declined" | "cancelled" | "offer_closed";
 export type CourierJobStatus = "assigned" | "accepted" | "picked_up" | "at_shop" | "returning" | "delivered";
 export type Delivery = { id: string; request_id: string; reference: string; device: string; issue: string; request_status: string; delivery_status: CourierJobStatus; courier_name: string; customer_name?: string; customer_phone?: string; city?: string; district?: string; delivery_address?: string; shop_name?: string; shop_address?: string; shop_phone?: string; shop_city?: string; shop_district?: string };
 export type Courier = { id: string; full_name: string; city: string; district: string; available: boolean };
@@ -27,12 +27,13 @@ export type DeviceCustody = { holder: "Müşteride" | "Kuryede" | "Ustada"; deta
 
 export const statusClass: Record<RequestStatus, string> = {
   "Yeni talep": "status-new", "Usta aranıyor": "status-search", "Teklif gönderildi": "status-offer", "Atandı": "status-assigned",
+  "Teşhis yapılıyor": "status-offer", "Görevli onayında": "status-search", "Müşteri onayladı": "status-assigned",
   "Tamir sürüyor": "status-offer", "Onay bekliyor": "status-search", "Parça bekliyor": "status-search", "Teslimata hazır": "status-assigned", "Tamamlandı": "status-assigned", "İptal edildi": "status-new",
 };
 
 export function mapRequest(row: Record<string, unknown>): RepairRequest {
   const databaseStatus = String(row.status ?? "new");
-  const labels: Record<string, RequestStatus> = { new: "Yeni talep", reviewing: "Usta aranıyor", offered: "Teklif gönderildi", assigned: "Atandı", in_repair: "Tamir sürüyor", waiting_customer: "Onay bekliyor", waiting_parts: "Parça bekliyor", ready_for_delivery: "Teslimata hazır", with_courier: "Teslimata hazır", completed: "Tamamlandı", cancelled: "İptal edildi" };
+  const labels: Record<string, RequestStatus> = { new: "Yeni talep", reviewing: "Usta aranıyor", offered: "Teklif gönderildi", assigned: "Atandı", diagnosing: "Teşhis yapılıyor", quote_review: "Görevli onayında", approved: "Müşteri onayladı", in_repair: "Tamir sürüyor", waiting_customer: "Onay bekliyor", waiting_parts: "Parça bekliyor", ready_for_delivery: "Teslimata hazır", with_courier: "Teslimata hazır", completed: "Tamamlandı", cancelled: "İptal edildi" };
   const status = labels[databaseStatus] ?? "Yeni talep";
   const customer = String(row.customer_name ?? "Müşteri");
   const createdAt = row.created_at ? new Date(String(row.created_at)) : new Date();
@@ -72,6 +73,9 @@ export function mapTechnicianJobStatus(request?: RepairRequest): TechnicianJobSt
   if (request.offerStatus === "declined") return "declined";
   if (request.offerStatus === "cancelled") return "offer_closed";
   if (request.offerStatus === "pending") return "offer";
+  if (request.statusRaw === "diagnosing") return "diagnosing";
+  if (request.statusRaw === "quote_review") return "review";
+  if (request.statusRaw === "approved") return "approved";
   if (request.statusRaw === "in_repair") return "repairing";
   if (request.statusRaw === "waiting_customer") return "approval";
   if (request.statusRaw === "waiting_parts") return "parts";
@@ -123,6 +127,9 @@ export function formatRepairEventTime(value: string) {
 export function mapCustomerJobStatus(request?: RepairRequest): TechnicianJobStatus {
   if (!request || ["new", "reviewing", "offered"].includes(request.statusRaw)) return "offer";
   if (request.statusRaw === "assigned") return "accepted";
+  if (request.statusRaw === "diagnosing") return "diagnosing";
+  if (request.statusRaw === "quote_review") return "review";
+  if (request.statusRaw === "approved") return "approved";
   if (request.statusRaw === "in_repair") return "repairing";
   if (request.statusRaw === "waiting_customer") return "approval";
   if (request.statusRaw === "waiting_parts") return "parts";

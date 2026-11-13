@@ -7,12 +7,18 @@ import type { AppRole } from "@/types/next-auth";
 export const runtime = "nodejs";
 
 type RouteContext = { params: Promise<{ requestId: string }> };
-const validStatuses = new Set(["reviewing", "in_repair", "waiting_customer", "waiting_parts", "ready_for_delivery", "cancelled"]);
+const validStatuses = new Set(["reviewing", "diagnosing", "quote_review", "waiting_customer", "approved", "in_repair", "waiting_parts", "ready_for_delivery", "cancelled"]);
+// Usta: teşhis (cihaz gelmeden) → görevli onaylı teklif → müşteri onayı → tamir.
+// Ek iş her zaman teklif olarak görevliye gider; doğrudan müşteriye gönderilemez.
 const technicianTransitions: Record<string, string[]> = {
-  assigned: ["in_repair"],
-  in_repair: ["waiting_customer", "waiting_parts", "ready_for_delivery"],
+  assigned: ["diagnosing"],
+  diagnosing: ["quote_review"],
+  approved: ["in_repair"],
+  in_repair: ["quote_review", "waiting_parts", "ready_for_delivery"],
   waiting_parts: ["in_repair"],
 };
+// Bu durumlarda talebe usta atanmış olmalı.
+const requiresTechnicianStatuses = ["diagnosing", "quote_review", "waiting_customer", "approved", "in_repair", "waiting_parts", "ready_for_delivery"];
 
 function statusError(error: unknown) {
   if (error instanceof AuthenticationRequiredError) return NextResponse.json({ error: "Giriş yapman gerekiyor." }, { status: 401 });
@@ -31,8 +37,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (typeof nextStatus !== "string" || !validStatuses.has(nextStatus)) {
       return NextResponse.json({ error: "Geçerli bir talep durumu seç." }, { status: 400 });
     }
-    if (note.length > 1000 || (nextStatus === "waiting_customer" && note.length < 3)) return NextResponse.json({ error: "Onay için yapılacak işlemi açıklayın (3–1000 karakter)." }, { status: 400 });
-    if (note && actor.role !== "technician" && actor.role !== "admin") return NextResponse.json({ error: "Bu işlem için yetkin yok." }, { status: 403 });
+    // Teklif ve görevlinin müşteriye gönderme / ustaya geri gönderme adımlarında açıklama zorunlu.
+    const noteRequired = nextStatus === "quote_review" || nextStatus === "waiting_customer" || (nextStatus === "diagnosing" && actor.role !== "technician");
+    if (note.length > 1000 || (noteRequired && note.length < 3)) return NextResponse.json({ error: "Teşhis ve yapılacak işlemi açıklayın (3–1000 karakter)." }, { status: 400 });
+    if (note && !["technician", "staff", "admin"].includes(actor.role)) return NextResponse.json({ error: "Bu işlem için yetkin yok." }, { status: 403 });
 
     const result = await withTransaction(async (client) => {
       const selected = await client.query(
@@ -45,8 +53,8 @@ export async function PATCH(request: Request, context: RouteContext) {
       if (!repair) return { error: "Talep bulunamadı.", httpStatus: 404 } as const;
       if (repair.status === nextStatus) return { error: "Talep zaten bu durumda.", httpStatus: 409 } as const;
       if (["completed", "cancelled"].includes(repair.status)) return { error: "Tamamlanmış veya iptal edilmiş talep değiştirilemez.", httpStatus: 409 } as const;
-      if (["in_repair", "waiting_customer", "waiting_parts", "ready_for_delivery"].includes(nextStatus) && !repair.assigned_technician_id) return { error: "Önce talebe bir usta atanmalı.", httpStatus: 409 } as const;
-      if (nextStatus === "in_repair" && repair.status === "assigned" && repair.delivery_status && repair.delivery_status !== "at_shop") return { error: "Cihaz ustaya teslim edilmeden tamir başlatılamaz.", httpStatus: 409 } as const;
+      if (requiresTechnicianStatuses.includes(nextStatus) && !repair.assigned_technician_id) return { error: "Önce talebe bir usta atanmalı.", httpStatus: 409 } as const;
+      if (nextStatus === "in_repair" && repair.delivery_status && repair.delivery_status !== "at_shop") return { error: "Cihaz ustaya teslim edilmeden tamir başlatılamaz.", httpStatus: 409 } as const;
       if (nextStatus === "cancelled" && ["picked_up", "at_shop", "returning"].includes(repair.delivery_status)) return { error: "Cihaz teslimat sürecindeyken talep iptal edilemez.", httpStatus: 409 } as const;
 
       const allowedRoles: AppRole[] = ["admin"];
@@ -55,11 +63,14 @@ export async function PATCH(request: Request, context: RouteContext) {
           return { error: "Bu talebin durumunu bu aşamada değiştiremezsin.", httpStatus: 403 } as const;
         }
       } else if (actor.role === "customer") {
-        if (repair.customer_user_id !== actor.id || repair.status !== "waiting_customer" || nextStatus !== "in_repair") {
+        if (repair.customer_user_id !== actor.id || repair.status !== "waiting_customer" || nextStatus !== "approved") {
           return { error: "Bu talep için şu anda onay verilemiyor.", httpStatus: 403 } as const;
         }
       } else if (actor.role === "staff") {
-        if (nextStatus !== "reviewing" && nextStatus !== "cancelled") {
+        // Görevli: yeni talebi incelemeye alır, usta teklifini onaylayıp müşteriye gönderir ya da ustaya geri gönderir.
+        const staffReview = repair.status === "quote_review" && (nextStatus === "waiting_customer" || nextStatus === "diagnosing");
+        const staffIntake = nextStatus === "reviewing" || nextStatus === "cancelled";
+        if (!staffReview && !staffIntake) {
           return { error: "Görevli bu durum değişikliğini yapamaz.", httpStatus: 403 } as const;
         }
         if (nextStatus === "reviewing" && repair.status !== "new") return { error: "Bu talep artık inceleme aşamasına alınamaz.", httpStatus: 409 } as const;

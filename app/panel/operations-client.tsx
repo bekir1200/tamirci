@@ -21,7 +21,7 @@ type TechnicianRow = {
 type OfferRow = { id: string; status: string; created_at: string; responded_at?: string | null; technician_name: string };
 type EventRow = { id: string; event_type: string; to_status?: string | null; created_at: string; actor_name?: string | null; technician_name?: string | null };
 
-const statusLabels: Record<string, string> = { new: "Yeni talep", reviewing: "Usta aranıyor", offered: "Teklif gönderildi", assigned: "Ustaya atandı", in_repair: "Tamir sürüyor", waiting_customer: "Müşteri onayı bekliyor", waiting_parts: "Parça bekliyor", ready_for_delivery: "Teslimata hazır", with_courier: "Kuryede", completed: "Tamamlandı", cancelled: "İptal edildi" };
+const statusLabels: Record<string, string> = { new: "Yeni talep", reviewing: "Usta aranıyor", offered: "Teklif gönderildi", assigned: "Ustaya atandı", diagnosing: "Teşhis yapılıyor", quote_review: "Görevli onayında", approved: "Müşteri onayladı", in_repair: "Tamir sürüyor", waiting_customer: "Müşteri onayı bekliyor", waiting_parts: "Parça bekliyor", ready_for_delivery: "Teslimata hazır", with_courier: "Kuryede", completed: "Tamamlandı", cancelled: "İptal edildi" };
 const offerLabels: Record<string, string> = { pending: "Yanıt bekliyor", accepted: "Kabul edildi", declined: "Reddedildi", cancelled: "Kapatıldı" };
 const dateTime = (value?: string | null) => value ? new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Istanbul" }).format(new Date(value)) : "Belirtilmemiş";
 

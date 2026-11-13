@@ -57,6 +57,8 @@ export async function POST(request: Request, context: RouteContext) {
           [courierId, actor.id, nextDeliveryStatus, deliveryId],
         );
       } else {
+        // İlk kurye ataması yalnızca müşteri teklifi onayladıktan sonra yapılabilir.
+        if (repair.status !== "approved") return { error: "Kurye atamak için önce müşterinin teklifi onaylaması gerekir.", status: 409 } as const;
         deliveryId = randomUUID();
         eventType = "delivery_assigned";
         fromStatus = null;

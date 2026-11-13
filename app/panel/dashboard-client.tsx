@@ -279,13 +279,13 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
     const url = nextStatus === "accepted" || nextStatus === "declined"
       ? `/api/offers/${activeTechnicianJob.offerId}`
       : `/api/requests/${activeTechnicianJob.dbId}/status`;
-    const status = nextStatus === "accepted" ? "accepted" : nextStatus === "declined" ? "declined" : nextStatus === "repairing" ? "in_repair" : nextStatus === "approval" ? "waiting_customer" : nextStatus === "parts" ? "waiting_parts" : "ready_for_delivery";
+    const status = nextStatus === "accepted" ? "accepted" : nextStatus === "declined" ? "declined" : nextStatus === "diagnosing" ? "diagnosing" : nextStatus === "review" ? "quote_review" : nextStatus === "repairing" ? "in_repair" : nextStatus === "parts" ? "waiting_parts" : "ready_for_delivery";
     try {
       const response = await fetch(url, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, ...(note ? { note } : {}) }) });
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error ?? "İş durumu kaydedilemedi.");
       setTechnicianJobStatus(nextStatus);
-      const rawStatus = nextStatus === "accepted" ? "assigned" : nextStatus === "repairing" ? "in_repair" : nextStatus === "approval" ? "waiting_customer" : nextStatus === "parts" ? "waiting_parts" : nextStatus === "completed" ? "ready_for_delivery" : "reviewing";
+      const rawStatus = nextStatus === "accepted" ? "assigned" : nextStatus === "diagnosing" ? "diagnosing" : nextStatus === "review" ? "quote_review" : nextStatus === "repairing" ? "in_repair" : nextStatus === "parts" ? "waiting_parts" : nextStatus === "completed" ? "ready_for_delivery" : "reviewing";
       setRequests((current) => current.map((request) => request.dbId === activeTechnicianJob.dbId ? { ...request, statusRaw: rawStatus, repairNotes: note || request.repairNotes, offerStatus: nextStatus === "accepted" ? "accepted" : nextStatus === "declined" ? "declined" : request.offerStatus } : request));
       void refreshRequestEvents(activeTechnicianJob.dbId);
       setNotice(nextStatus === "accepted" ? "İş sana atandı." : nextStatus === "declined" ? "Teklif reddedildi." : "İş durumu güncellendi.");
@@ -458,7 +458,7 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
               <div className="matching-heading"><div><div className="title-line"><h2>2. Ustaya teklif gönder</h2><span className="live-pill"><span/> CANLI</span></div><p>Ustaların müsaitliğini ve ilçesini kontrol edip teklif gönder.</p></div></div>
               <div className="selected-request"><div className="selected-request-top"><span className="selected-label">SEÇİLİ TALEP</span><span className="request-code">{selected?.id}</span></div><div className="selected-device"><div className="device-icon"><Smartphone size={20}/></div><div><strong>{selected?.device}</strong><span>{selected?.issue}</span></div><span className={`status-badge compact ${statusClass[selected?.status ?? "Yeni talep"]}`}><i/>{selected?.status}</span></div><div className="selected-meta"><span><UserRound size={13}/>{selected?.customer}</span><span><MapPin size={13}/>{selected?.district}</span>{selected?.imei && <span>IMEI: {selected.imei}</span>}</div></div>
               <div className={`selected-custody custody-${selectedCustody.kind}`}><div className="custody-icon">{selectedCustody.kind === "courier" ? <Truck size={20}/> : selectedCustody.kind === "technician" ? <Wrench size={20}/> : <Smartphone size={20}/>}</div><div><span>CİHAZ ŞU ANDA KİMDE?</span><strong>{selectedCustody.holder}</strong><small>{selectedCustody.detail}</small></div><span className="custody-live"><i/>Güncel</span></div>
-              <div className="delivery-assignment"><h3>Kurye ataması</h3>{selected && <DeliveryAddress key={selected.dbId} requestId={selected.dbId} initialAddress={selected.deliveryAddress} disabled={["completed", "cancelled"].includes(selected.statusRaw)} onSaved={(address) => { setRequests((current) => current.map((item) => item.dbId === selected.dbId ? { ...item, deliveryAddress: address } : item)); void refreshRecentActivity(); }} />}{selected?.assignedCourierName && <p>Atanan kurye: <strong>{selected.assignedCourierName}</strong></p>}{selected && (!selected.deliveryStatus || ["assigned", "accepted", "at_shop"].includes(selected.deliveryStatus)) && <><label htmlFor="courier-select">Kurye seç</label><select id="courier-select" value={courierId} onChange={(event) => setCourierId(event.target.value)}><option value="">Kurye seçin</option>{couriers.map((courier) => <option key={courier.id} value={courier.id}>{courier.full_name}{courier.district ? ` · ${courier.district}` : ""}</option>)}</select><button className="button button-primary" disabled={!courierId || deliveryPending} aria-busy={deliveryPending} onClick={assignCourier}>{deliveryPending ? "Kaydediliyor…" : selected.deliveryStatus ? "Kuryeyi değiştir" : "Kurye ata"}</button>{couriers.length === 0 && !deliveryError && <p>Atanabilecek kurye bulunamadı.</p>}</>}{deliveryError && <p role="alert">{deliveryError}</p>}</div>
+              {selected?.statusRaw === "quote_review" && <QuoteReviewPanel key={selected.dbId} request={selected} onDone={(message) => { setLiveTick((tick) => tick + 1); setNotice(message); window.setTimeout(() => setNotice(""), 3200); }} />}<div className="delivery-assignment"><h3>Kurye ataması</h3>{selected && <DeliveryAddress key={selected.dbId} requestId={selected.dbId} initialAddress={selected.deliveryAddress} disabled={["completed", "cancelled"].includes(selected.statusRaw)} onSaved={(address) => { setRequests((current) => current.map((item) => item.dbId === selected.dbId ? { ...item, deliveryAddress: address } : item)); void refreshRecentActivity(); }} />}{selected?.assignedCourierName && <p>Atanan kurye: <strong>{selected.assignedCourierName}</strong></p>}{selected && !selected.deliveryStatus && selected.statusRaw !== "approved" && <p>Müşteri teklifi onaylayınca kurye atanabilir.</p>}{selected && (selected.deliveryStatus ? ["assigned", "accepted", "at_shop"].includes(selected.deliveryStatus) : selected.statusRaw === "approved") && <><label htmlFor="courier-select">Kurye seç</label><select id="courier-select" value={courierId} onChange={(event) => setCourierId(event.target.value)}><option value="">Kurye seçin</option>{couriers.map((courier) => <option key={courier.id} value={courier.id}>{courier.full_name}{courier.district ? ` · ${courier.district}` : ""}</option>)}</select><button className="button button-primary" disabled={!courierId || deliveryPending} aria-busy={deliveryPending} onClick={assignCourier}>{deliveryPending ? "Kaydediliyor…" : selected.deliveryStatus ? "Kuryeyi değiştir" : "Kurye ata"}</button>{couriers.length === 0 && !deliveryError && <p>Atanabilecek kurye bulunamadı.</p>}</>}{deliveryError && <p role="alert">{deliveryError}</p>}</div>
               <div className="match-summary"><span><strong>{visibleAvailableTechnicians}</strong> müsait usta bulundu</span><button className="text-button" aria-pressed={sameDistrictOnly} onClick={() => setSameDistrictOnly((current) => !current)}><SlidersHorizontal size={13}/> {sameDistrictOnly ? "Tüm ilçeler" : "Aynı ilçe"}</button></div>
               <div className="matching-tabs" role="tablist"><button role="tab" aria-selected={tab === "Uygun ustalar"} className={tab === "Uygun ustalar" ? "tab-active" : ""} onClick={() => setTab("Uygun ustalar")}>Ustalar <span>{visibleAvailableTechnicians}</span></button><button role="tab" aria-selected={tab === "Teklif geçmişi"} className={tab === "Teklif geçmişi" ? "tab-active" : ""} onClick={() => setTab("Teklif geçmişi")}>Teklif geçmişi</button></div>
               {tab === "Uygun ustalar" ? <div className="technician-list">{visibleTechnicians.map((technician, index) => { const alreadySent = selectedOffers.some((offer) => offer.technicianId === technician.id); return <article className="technician-card" key={technician.id}><div className="technician-top"><div className={`avatar tech-avatar tech-${index}`}>{technician.initials}</div><div className="technician-identity"><div className="technician-name">{technician.name}</div><span>{technician.shop}</span></div></div><div className="technician-details"><span><MapPin size={12}/>{technician.district || "Konum belirtilmemiş"}</span></div><div className="specialty-list">{technician.specialties.map((specialty) => <span key={specialty}>{specialty}</span>)}</div><div className="technician-action"><span className={technician.available ? "availability available" : "availability unavailable"}><i/>{technician.available ? "Müsait" : "Meşgul"}</span><button className={`button ${alreadySent ? "button-sent" : "button-offer"}`} disabled={!technician.available || alreadySent || offerPending || !selected || !["new", "reviewing", "offered"].includes(selected.statusRaw)} onClick={() => sendOffer(technician)}>{alreadySent ? <><Check size={14}/> Gönderildi</> : "Teklif gönder"}</button></div></article>; })}</div> : <div className="history-list">{selectedOffers.length ? selectedOffers.map((offer) => <div className="history-item" key={`${offer.requestId}-${offer.technician}`}><div className="history-icon"><Check size={15}/></div><div><strong>{offer.technician}</strong><span>{offer.status === "accepted" ? "Kabul edildi" : offer.status === "declined" ? "Reddedildi" : offer.status === "cancelled" ? "Kapatıldı" : "Yanıt bekleniyor"}</span></div><time>{formatRepairEventTime(offer.createdAt)}</time></div>) : <div className="history-empty"><Clock3 size={21}/><strong>Henüz teklif yok</strong><span>Bu talep için gönderilen teklifler burada görünecek.</span></div>}</div>}
@@ -480,10 +480,10 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
             if (approvalPending) return;
             setApprovalPending(true);
             try {
-            const response = await fetch(`/api/requests/${customerRequest.dbId}/status`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "in_repair" }) });
+            const response = await fetch(`/api/requests/${customerRequest.dbId}/status`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "approved" }) });
             const result = await response.json() as { error?: string };
             if (!response.ok) { setNotice(result.error ?? "Onay kaydedilemedi."); return; }
-            setRequests((current) => current.map((request) => request.dbId === customerRequest.dbId ? { ...request, statusRaw: "in_repair" } : request));
+            setRequests((current) => current.map((request) => request.dbId === customerRequest.dbId ? { ...request, statusRaw: "approved" } : request));
             void refreshRequestEvents(customerRequest.dbId);
             setNotice("İşlem onayınız kaydedildi.");
             } catch { setNotice("Onay kaydedilemedi. Tekrar deneyin."); }
@@ -531,6 +531,9 @@ function TechnicianDashboard({
   const statusLabels: Record<TechnicianJobStatus, string> = {
     offer: "Yeni teklif",
     accepted: "Kabul edildi",
+    diagnosing: "Teşhis yapılıyor",
+    review: "Görevli onayında",
+    approved: "Müşteri onayladı",
     repairing: "Tamir sürüyor",
     approval: "Onay bekliyor",
     parts: "Parça bekliyor",
@@ -541,12 +544,13 @@ function TechnicianDashboard({
   };
   const primaryAction: Partial<Record<TechnicianJobStatus, { label: string; next: TechnicianJobStatus }>> = {
     offer: { label: "İşi kabul et", next: "accepted" },
-    accepted: { label: "Tamire başla", next: "repairing" },
+    accepted: { label: "Teşhise başla", next: "diagnosing" },
+    approved: { label: "Tamire başla", next: "repairing" },
     repairing: { label: "Tamiri tamamla", next: "completed" },
     parts: { label: "Parça geldi · tamire dön", next: "repairing" },
   };
   const action = primaryAction[status];
-  const awaitingDelivery = status === "accepted" && Boolean(job?.deliveryStatus && job.deliveryStatus !== "at_shop");
+  const awaitingDelivery = status === "approved" && Boolean(job?.deliveryStatus && job.deliveryStatus !== "at_shop");
 
   if (!job) return <section className="panel request-empty-state"><span className="empty-state-icon"><Wrench size={23}/></span><span className="eyebrow">USTA İŞLERİ</span><h1>{history ? "Henüz tamamlanan iş yok." : "Bekleyen teklif yok."}</h1><p>{history ? "Tamamladığın işler burada görüntülenir." : "Yeni bir iş teklifi geldiğinde burada görüntüleyebilirsin."}</p><button className={`availability-toggle ${available ? "is-available" : "is-unavailable"}`} aria-pressed={available} disabled={availabilityPending} aria-busy={availabilityPending} onClick={() => onAvailabilityChange(!available)}><span className="availability-indicator" />{available ? "Yeni işlere açığım" : "Yeni işlere kapalıyım"}</button></section>;
 
@@ -575,9 +579,9 @@ function TechnicianDashboard({
         {awaitingDelivery && <div className="job-state-message"><Truck size={17}/><span>Kurye cihazı atölyeye teslim ettiğinde tamire başlayabilirsin.</span></div>}
         {job.description && <div className="job-description"><strong>Müşterinin notu</strong><p>{job.description}</p></div>}
         <details className="customer-event-history technician-event-history" open><summary>Talep geçmişi <span>{eventHistory.length}</span></summary><div className="customer-event-list">{eventHistory.length ? eventHistory.slice(0, 10).map((event) => <div key={event.id}><span className="history-icon"><Activity size={14}/></span><div className="repair-event-copy"><p>{describeRepairEvent(event)}</p><small>{event.reference} · {event.device} · {event.issue}</small></div><time>{formatRepairEventTime(event.createdAt)}</time></div>) : <p className="repair-event-empty">Bu işte henüz hareket kaydı yok.</p>}</div></details>
-        {status === "accepted" || status === "repairing" ? <div className="technician-tools"><label>Teşhis ve yapılacak işlem<textarea value={repairNote} onChange={(event) => setRepairNote(event.target.value)} maxLength={1000} placeholder="Teşhis bulgularını ve yapılacak işlemi yaz" /></label><div><button className="button button-secondary" disabled={pending || repairNote.trim().length < 3} onClick={() => onSaveNote(repairNote.trim())}>Notu kaydet</button>{status === "repairing" && <><button className="button button-secondary" disabled={pending || repairNote.trim().length < 3} onClick={() => onStatusChange("approval", repairNote.trim())}>Müşteri onayı iste</button><button className="button button-secondary" disabled={pending} onClick={() => onStatusChange("parts")}>Parça bekliyor</button></>}</div></div> : null}
-        {status === "approval" || status === "parts" ? <div className="job-state-message"><Clock3 size={17} /><span>{status === "approval" ? "Yapılacak işlem için müşteri onayı bekleniyor." : "Gerekli yedek parça bekleniyor. Müşteri durumu takip ekranında görebilir."}</span></div> : null}
-        {status === "offer_closed" ? <div className="job-state-message"><X size={17} /><span>Bu teklif kapatıldı.</span></div> : status === "cancelled" ? <div className="job-state-message"><X size={17} /><span>Bu talep iptal edildi.</span></div> : status === "declined" ? <div className="job-state-message"><X size={17} /><span>Bu teklifi reddettin.</span></div> : status === "completed" ? <div className="job-state-message job-success"><CheckCircle2 size={18} /><span>Tamir tamamlandı olarak işaretlendi.</span></div> : <div className="job-actions"><span>{status === "offer" ? "Teklifi kabul ettiğinde işin sana atanır." : status === "accepted" ? "İş sende. Cihazı teslim aldığında tamire başlayabilirsin." : "İş bittiğinde durumu görevli ve müşteriyle paylaşılır."}</span><div>{status === "offer" && <button className="button button-danger-outline" disabled={pending} onClick={() => onStatusChange("declined")}>Reddet</button>}{action && <button className="button button-primary" disabled={pending || awaitingDelivery} onClick={() => onStatusChange(action.next)}>{action.label}<ArrowRight size={15} /></button>}</div></div>}
+        {status === "diagnosing" || status === "repairing" ? <div className="technician-tools"><label>Teşhis ve yapılacak işlem<textarea value={repairNote} onChange={(event) => setRepairNote(event.target.value)} maxLength={1000} placeholder="Teşhis bulgularını ve yapılacak işlemi yaz" /></label><div><button className="button button-secondary" disabled={pending || repairNote.trim().length < 3} onClick={() => onSaveNote(repairNote.trim())}>Notu kaydet</button>{status === "diagnosing" && <button className="button button-primary" disabled={pending || repairNote.trim().length < 3} onClick={() => onStatusChange("review", repairNote.trim())}>Teklifi görevliye gönder</button>}{status === "repairing" && <><button className="button button-secondary" disabled={pending || repairNote.trim().length < 3} onClick={() => onStatusChange("review", repairNote.trim())}>Ek iş teklifi gönder</button><button className="button button-secondary" disabled={pending} onClick={() => onStatusChange("parts")}>Parça bekliyor</button></>}</div></div> : null}
+        {status === "review" ? <div className="job-state-message"><Clock3 size={17} /><span>Teklifin görevli onayında. Onaylanınca müşteriye iletilecek.</span></div> : status === "approval" || status === "parts" ? <div className="job-state-message"><Clock3 size={17} /><span>{status === "approval" ? "Yapılacak işlem için müşteri onayı bekleniyor." : "Gerekli yedek parça bekleniyor. Müşteri durumu takip ekranında görebilir."}</span></div> : null}
+        {status === "offer_closed" ? <div className="job-state-message"><X size={17} /><span>Bu teklif kapatıldı.</span></div> : status === "cancelled" ? <div className="job-state-message"><X size={17} /><span>Bu talep iptal edildi.</span></div> : status === "declined" ? <div className="job-state-message"><X size={17} /><span>Bu teklifi reddettin.</span></div> : status === "completed" ? <div className="job-state-message job-success"><CheckCircle2 size={18} /><span>Tamir tamamlandı olarak işaretlendi.</span></div> : <div className="job-actions"><span>{status === "offer" ? "Teklifi kabul ettiğinde işin sana atanır." : status === "accepted" ? "İş sende. Teşhise başlayabilirsin." : status === "diagnosing" ? "Teşhisi yazıp teklifi görevliye gönder." : status === "review" ? "Teklif görevlinin onayında." : status === "approved" ? "Müşteri onayladı. Cihaz dükkâna gelince tamire başlayabilirsin." :"İş bittiğinde durumu görevli ve müşteriyle paylaşılır."}</span><div>{status === "offer" && <button className="button button-danger-outline" disabled={pending} onClick={() => onStatusChange("declined")}>Reddet</button>}{action && <button className="button button-primary" disabled={pending || awaitingDelivery} onClick={() => onStatusChange(action.next)}>{action.label}<ArrowRight size={15} /></button>}</div></div>}
       </section>
 
       <aside className="panel role-side-panel">
@@ -604,8 +608,8 @@ function CourierDashboard({ deliveries, selectedId, onSelect, loading, error, pe
 }
 
 function CustomerTracking({ request, status, courierStatus, eventHistory, pending, onApprove }: { request: RepairRequest; status: TechnicianJobStatus; courierStatus?: CourierJobStatus; eventHistory: RepairEvent[]; pending: boolean; onApprove: () => void }) {
-  const statusLabels: Record<TechnicianJobStatus, string> = { offer: "Usta eşleşmesi bekleniyor", accepted: "Usta işi kabul etti", repairing: "Tamir devam ediyor", approval: "Ek işlem için onayınız bekleniyor", parts: "Yedek parça bekleniyor", completed: "Tamir tamamlandı", declined: "Yeni usta aranıyor", cancelled: "Talep iptal edildi", offer_closed: "Teklif kapatıldı" };
-  const active = courierStatus === "delivered" ? 4 : courierStatus === "returning" || status === "completed" ? 3 : courierStatus === "at_shop" || courierStatus === "picked_up" || status === "repairing" || status === "approval" || status === "parts" ? 2 : courierStatus === "accepted" || status === "accepted" ? 1 : 0;
+  const statusLabels: Record<TechnicianJobStatus, string> = { offer: "Usta eşleşmesi bekleniyor", accepted: "Usta işi kabul etti", diagnosing: "Usta teşhis yapıyor", review: "Teklif görevlinin onayında", approved: "Onayınız alındı, kurye bekleniyor",repairing: "Tamir devam ediyor", approval: "Ek işlem için onayınız bekleniyor", parts: "Yedek parça bekleniyor", completed: "Tamir tamamlandı", declined: "Yeni usta aranıyor", cancelled: "Talep iptal edildi", offer_closed: "Teklif kapatıldı" };
+  const active = courierStatus === "delivered" ? 4 : courierStatus === "returning" || status === "completed" ? 3 : courierStatus === "at_shop" || courierStatus === "picked_up" || status === "repairing" || status === "approval" || status === "parts" ? 2 : courierStatus === "accepted" || ["accepted", "diagnosing", "review", "approved"].includes(status) ? 1 : 0;
   const repairStep = status === "approval" ? "Onayınız bekleniyor" : status === "parts" ? "Parça bekleniyor" : status === "completed" ? "Tamir tamamlandı" : courierStatus === "picked_up" ? "Cihaz servise gidiyor" : courierStatus === "at_shop" ? "Cihaz ustada" : "Tamir sürüyor";
   const steps = ["Talep alındı", "Usta bulundu", repairStep, courierStatus === "returning" ? "Kurye cihazınızı getiriyor" : "Teslimat", "Size teslim edildi"];
   const custody = getDeviceCustody(request);
@@ -622,4 +626,36 @@ function CustomerTracking({ request, status, courierStatus, eventHistory, pendin
     </section>
 
   </>;
+}
+
+function QuoteReviewPanel({ request, onDone }: { request: RepairRequest; onDone: (message: string) => void }) {
+  const [note, setNote] = useState(request.repairNotes ?? "");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  async function send(status: "waiting_customer" | "diagnosing") {
+    if (pending) return;
+    setPending(true); setError("");
+    try {
+      const response = await fetch(`/api/requests/${request.dbId}/status`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, note: note.trim() }) });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? "Teklif işlemi kaydedilemedi.");
+      onDone(status === "waiting_customer" ? "Teklif müşteriye gönderildi." : "Teklif ustaya geri gönderildi.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Teklif işlemi kaydedilemedi.");
+    } finally {
+      setPending(false);
+    }
+  }
+  return (
+    <section className="panel delivery-assignment quote-review">
+      <h3>Usta teklifi</h3>
+      <p>Teklifi kontrol et, gerekirse düzenle ve müşteriye gönder.</p>
+      <textarea value={note} onChange={(event) => setNote(event.target.value)} maxLength={1000} rows={4} aria-label="Usta teklifi" />
+      <div className="quote-review-actions">
+        <button className="button button-secondary" disabled={pending || note.trim().length < 3} onClick={() => void send("diagnosing")}>Ustaya geri gönder</button>
+        <button className="button button-primary" disabled={pending || note.trim().length < 3} aria-busy={pending} onClick={() => void send("waiting_customer")}>{pending ? "Gönderiliyor…" : "Müşteriye gönder"}</button>
+      </div>
+      {error && <p role="alert">{error}</p>}
+    </section>
+  );
 }
