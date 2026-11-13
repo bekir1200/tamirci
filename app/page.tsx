@@ -4,6 +4,15 @@ import {
   ArrowDownRight, ArrowRight, BatteryCharging, Check, CheckCircle2,
   ChevronRight, Clock3, MapPin, ShieldCheck, Smartphone, Sparkles, Wrench,
 } from "lucide-react";
+import { operator } from "@/lib/legal";
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  name: "AloJetCep",
+  description: "Telefon arızası için sana yakın ustalara kontrollü yönlendirme ve şeffaf tamir süreci.",
+  ...(operator.phone ? { telephone: operator.phone } : {}),
+};
 
 const services = [
   { icon: Smartphone, title: "Ekran değişimi", detail: "Kırık ve görüntü sorunları" },
@@ -14,6 +23,7 @@ const services = [
 export default function LandingPage() {
   return (
     <main className="landing-page">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
       <header className="landing-header">
         <Link className="landing-brand" href="/" aria-label="AloJetCep ana sayfa">
           <Image className="landing-brand-logo" src="/brand/alojetcep-logo.png" alt="AloJetCep" width={280} height={196} priority />
@@ -80,7 +90,8 @@ export default function LandingPage() {
 
       <section className="landing-cta"><div><span className="section-kicker">ALOJETCEP YANINDA</span><h2>Telefonun için ilk adımı at.</h2><p>Talebini oluştur, gerisini birlikte takip edelim.</p></div><Link href="/talep" className="button-light">Ücretsiz talep oluştur <ArrowRight size={17} /></Link><div className="cta-decoration" /></section>
 
-      <footer className="landing-footer"><Link className="landing-brand footer-brand" href="/"><Image className="landing-brand-logo" src="/brand/alojetcep-logo.png" alt="AloJetCep" width={280} height={196} /></Link><span>Telefon tamirinde kolay ve şeffaf bir deneyim.</span><span>© 2026 AloJetCep</span></footer>
+      {operator.phone && <a className="landing-contact" href={`tel:${operator.phone}`}>{operator.phone}</a>}
+      <footer className="landing-footer"><Link className="landing-brand footer-brand" href="/"><Image className="landing-brand-logo" src="/brand/alojetcep-logo.png" alt="AloJetCep" width={280} height={196} /></Link><span>Telefon tamirinde kolay ve şeffaf bir deneyim.</span><span>© 2026 AloJetCep · <Link href="/kvkk">Aydınlatma metni</Link></span></footer>
     </main>
   );
 }

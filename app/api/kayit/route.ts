@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { createAccountToken } from "@/lib/account-tokens";
 import { registerLocalAccount } from "@/lib/credentials";
 import { DatabaseConfigurationError } from "@/lib/db";
+import { mailConfigured, sendMail, siteUrl } from "@/lib/mail";
+import { clientIp, consumeRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -36,11 +39,31 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await registerLocalAccount({ name, email, password });
+    const allowed = await consumeRateLimit(`signup:${clientIp(request)}`, 5, 60);
+    if (!allowed) {
+      return NextResponse.json({ error: "Çok fazla deneme yapıldı. Bir süre sonra tekrar dene." }, { status: 429 });
+    }
+
+    const verificationRequired = mailConfigured();
+    const result = await registerLocalAccount({ name, email, password, verified: !verificationRequired });
     if (!result.ok) {
       return NextResponse.json({ error: "Bu e-posta adresiyle bir hesap zaten var." }, { status: 409 });
     }
-    return NextResponse.json({ ok: true }, { status: 201 });
+
+    if (verificationRequired) {
+      const token = await createAccountToken(result.account.id, "email_verify", 60 * 24);
+      const link = `${siteUrl(request)}/api/dogrula?token=${encodeURIComponent(token)}`;
+      try {
+        await sendMail({
+          to: result.account.email,
+          subject: "AloJetCep hesabını doğrula",
+          text: `Merhaba ${result.account.name},\n\nHesabını doğrulamak için bu bağlantıyı aç (24 saat geçerli):\n${link}\n\nBu hesabı sen açmadıysan bu e-postayı yok sayabilirsin.`,
+        });
+      } catch (error) {
+        console.error("Verification mail failed:", error instanceof Error ? error.message : "Unknown error");
+      }
+    }
+    return NextResponse.json({ ok: true, verificationRequired }, { status: 201 });
   } catch (error) {
     if (error instanceof DatabaseConfigurationError) {
       return NextResponse.json(

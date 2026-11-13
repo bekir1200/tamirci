@@ -46,17 +46,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: "/giris" },
   session: { strategy: "jwt" },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       if (!account || account.type !== "oauth") return true;
       if (!user.email) return false;
+      // Yalnızca sağlayıcının doğruladığını belirttiği e-postalar mevcut hesaba bağlanabilir.
+      const providerVerified = account.provider === "google" && (profile as { email_verified?: unknown } | undefined)?.email_verified === true;
       const linkedUser = await findOrCreateOAuthAccount({
         provider: account.provider,
         providerAccountId: account.providerAccountId,
         email: user.email,
         name: user.name ?? user.email,
-        emailVerified: Boolean((user as typeof user & { emailVerified?: Date | null }).emailVerified),
+        emailVerified: providerVerified,
       });
-      if (!linkedUser) return false;
+      if (!linkedUser) return "/giris?error=OAuthAccountNotLinked";
       user.id = linkedUser.id;
       user.role = linkedUser.role;
       return true;

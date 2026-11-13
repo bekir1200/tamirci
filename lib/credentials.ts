@@ -57,15 +57,15 @@ function mapAccount(row: AccountRow): LocalAccount | null {
   };
 }
 
-export async function registerLocalAccount(input: { name: string; email: string; password: string }) {
+export async function registerLocalAccount(input: { name: string; email: string; password: string; verified: boolean }) {
   const email = normalizeEmail(input.email);
   const passwordHash = await hashPassword(input.password);
   try {
     const result = await query<AccountRow>(
-      `INSERT INTO users (id, full_name, email, password_hash, role)
-       VALUES ($1, $2, $3, $4, 'customer')
+      `INSERT INTO users (id, full_name, email, password_hash, role, email_verified_at)
+       VALUES ($1, $2, $3, $4, 'customer', CASE WHEN $5::boolean THEN now() ELSE NULL END)
        RETURNING id, full_name, email, password_hash, role, is_active, created_at`,
-      [randomUUID(), input.name.trim(), email, passwordHash],
+      [randomUUID(), input.name.trim(), email, passwordHash, input.verified],
     );
     const account = mapAccount(result.rows[0]);
     if (!account) throw new Error("Registered account is missing its password hash");
@@ -78,15 +78,45 @@ export async function registerLocalAccount(input: { name: string; email: string;
   }
 }
 
-export async function verifyLocalAccount(email: string, password: string) {
-  const result = await query<AccountRow>(
-    `SELECT id, full_name, email, password_hash, role, is_active, created_at
+export type LocalLoginStatus = { status: "ok"; account: LocalAccount } | { status: "unverified" } | { status: "invalid" };
+
+export async function checkLocalLogin(email: string, password: string): Promise<LocalLoginStatus> {
+  const result = await query<AccountRow & { email_verified_at: Date | null }>(
+    `SELECT id, full_name, email, password_hash, role, is_active, created_at, email_verified_at
      FROM users WHERE lower(email) = $1 LIMIT 1`,
     [normalizeEmail(email)],
   );
   const row = result.rows[0];
-  if (!row || !row.is_active || !row.password_hash || !(await verifyPassword(password, row.password_hash))) return null;
-  return mapAccount(row);
+  if (!row || !row.is_active || !row.password_hash || !(await verifyPassword(password, row.password_hash))) return { status: "invalid" };
+  if (!row.email_verified_at) return { status: "unverified" };
+  const account = mapAccount(row);
+  return account ? { status: "ok", account } : { status: "invalid" };
+}
+
+export async function verifyLocalAccount(email: string, password: string) {
+  const result = await checkLocalLogin(email, password);
+  return result.status === "ok" ? result.account : null;
+}
+
+export async function markEmailVerified(userId: string) {
+  await query(`UPDATE users SET email_verified_at = COALESCE(email_verified_at, now()) WHERE id = $1`, [userId]);
+}
+
+export async function setAccountPassword(userId: string, password: string) {
+  const passwordHash = await hashPassword(password);
+  await query(
+    `UPDATE users SET password_hash = $2, email_verified_at = COALESCE(email_verified_at, now()) WHERE id = $1 AND password_hash IS NOT NULL`,
+    [userId, passwordHash],
+  );
+}
+
+export async function findActiveAccountByEmail(email: string) {
+  const result = await query<{ id: string; email: string; password_hash: string | null }>(
+    `SELECT id, email, password_hash FROM users WHERE lower(email) = $1 AND is_active = true LIMIT 1`,
+    [normalizeEmail(email)],
+  );
+  const row = result.rows[0];
+  return row?.password_hash ? { id: row.id, email: row.email } : null;
 }
 
 export async function findOrCreateOAuthAccount(input: {
@@ -113,10 +143,11 @@ export async function findOrCreateOAuthAccount(input: {
     let user = existing.rows[0];
     if (user && !input.emailVerified) return null;
     if (user && !user.is_active) return null;
+    if (user) await client.query(`UPDATE users SET email_verified_at = COALESCE(email_verified_at, now()) WHERE id = $1`, [user.id]);
     if (!user) {
       const created = await client.query<AccountRow>(
-        `INSERT INTO users (id, full_name, email, role)
-         VALUES ($1, $2, $3, 'customer')
+        `INSERT INTO users (id, full_name, email, role, email_verified_at)
+         VALUES ($1, $2, $3, 'customer', now())
          RETURNING id, full_name, email, password_hash, role, is_active, created_at`,
         [randomUUID(), input.name.trim().slice(0, 80) || email, email],
       );

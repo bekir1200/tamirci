@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -93,8 +92,8 @@
   --color-red-soft: #faeeeb;
   --color-green: #3d8a6d;
   --color-green-soft: #eaf4ef;
-  --font-body: 'DM Sans', sans-serif;
-  --font-display: 'Manrope', sans-serif;
+  --font-body: var(--font-dm-sans), 'DM Sans', sans-serif;
+  --font-display: var(--font-manrope), 'Manrope', sans-serif;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -1416,3 +1415,30 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .footer-brand .landing-brand-logo { width: 108px; height: 56px; }
 .brand-mark-image { display: block; width: 35px; height: 35px; flex: 0 0 auto; object-fit: contain; }
 @media (max-width: 720px) { .landing-brand-logo { width: 124px; height: 64px; } .footer-brand .landing-brand-logo { width: 100px; height: 52px; } }
+
+/* Hesap güvenliği, yasal sayfa ve mobil talep tablosu */
+.credentials-forgot { align-self: flex-end; margin-top: -4px; color: #17745f; font-size: 14px; font-weight: 600; text-decoration: none; }
+.credentials-forgot:hover { text-decoration: underline; }
+.landing-contact { display: inline-block; margin: 0 auto 18px; color: #32463b; font-size: 15px; font-weight: 700; text-decoration: none; text-align: center; }
+.landing-contact:hover { color: #13755f; }
+.legal-page { min-height: 100vh; background: #fbfcfa; color: #1b2923; }
+.legal-card { max-width: 760px; margin: 12px auto 60px; padding: 36px 40px; border: 1px solid #e4eae5; border-radius: 16px; background: #fff; line-height: 1.75; font-size: 15px; }
+.legal-card h1 { margin: 0 0 6px; color: #18352b; font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -.6px; }
+.legal-card h2 { margin: 28px 0 8px; color: #18352b; font-family: var(--font-display); font-size: 17px; font-weight: 700; }
+.legal-card p, .legal-card li { color: #46564c; }
+.legal-card ul { padding-left: 20px; }
+.legal-card a { color: #17745f; font-weight: 600; }
+.legal-updated { margin-bottom: 14px; color: #7a8880; font-size: 13px; }
+.request-consent a { color: #17745f; font-weight: 600; }
+@media (max-width: 680px) {
+  .legal-card { margin: 8px 12px 40px; padding: 24px 20px; }
+  .request-table, .request-table tbody { display: block; min-width: 0; }
+  .request-table thead { display: none; }
+  .request-table tbody tr { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 12px; border-bottom: 1px solid #eef1ee; }
+  .request-table td { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; height: auto; padding: 0 !important; border: 0; white-space: normal; }
+  .request-table td::before { content: attr(data-label); color: #9aa39e; font-size: 11px; font-weight: 600; letter-spacing: .3px; }
+  .request-table td:first-child, .request-table td:last-child { grid-column: 1 / -1; }
+  .request-table td:last-child { position: absolute; right: 14px; top: 14px; }
+  .request-table tbody tr { position: relative; }
+  .request-table td:last-child::before { content: none; }
+}

@@ -15,144 +15,9 @@ import {
   Menu, MoreHorizontal, Navigation, PackageCheck, Phone, Plus, Search, Settings2,
   ReceiptText, ShieldCheck, Smartphone, SlidersHorizontal, Truck, UserRound, Users, Wrench, X,
 } from "lucide-react";
-
-type RequestStatus = "Yeni talep" | "Usta aranıyor" | "Teklif gönderildi" | "Atandı" | "Tamir sürüyor" | "Onay bekliyor" | "Parça bekliyor" | "Teslimata hazır" | "Tamamlandı" | "İptal edildi";
-type RepairRequest = {
-  id: string; dbId: string; customer: string; customerPhone?: string; customerEmail?: string; initials: string; device: string; issue: string;
-  district: string; created: string; status: RequestStatus; priority: "Normal" | "Acil";
-  offerId?: string; offerStatus?: string; statusRaw: string; description?: string; repairNotes?: string; city?: string; imei?: string;
-  assignedTechnician?: string; deliveryStatus?: CourierJobStatus; assignedCourierName?: string;
-  warrantyStatus?: string; warrantyExpiresOn?: string; warrantyCheckedAt?: string;
-  deliveryAddress?: string;
-};
-type Technician = {
-  id: string; name: string; initials: string; shop: string; district: string; distance: string;
-  specialties: string[]; rating: string; jobs: number; available: boolean;
-};
-type SentOffer = { offerId: string; requestId: string; technicianId: string; technician: string; status: string; createdAt: string };
-type RepairEvent = {
-  id: string; eventType: string; fromStatus?: string; toStatus?: string; actorName?: string;
-  technicianName?: string; reference: string; device: string; issue: string; createdAt: string;
-};
-type Screen = "dispatch" | "technician" | "courier" | "customer";
-type TechnicianJobStatus = "offer" | "accepted" | "repairing" | "approval" | "parts" | "completed" | "declined" | "cancelled" | "offer_closed";
-type CourierJobStatus = "assigned" | "accepted" | "picked_up" | "at_shop" | "returning" | "delivered";
-type Delivery = { id: string; request_id: string; reference: string; device: string; issue: string; request_status: string; delivery_status: CourierJobStatus; courier_name: string; customer_name?: string; customer_phone?: string; city?: string; district?: string; delivery_address?: string; shop_name?: string; shop_address?: string; shop_phone?: string; shop_city?: string; shop_district?: string };
-type Courier = { id: string; full_name: string; city: string; district: string; available: boolean };
-type DeviceCustody = { holder: "Müşteride" | "Kuryede" | "Ustada"; detail: string; kind: "customer" | "courier" | "technician" };
-
-const statusClass: Record<RequestStatus, string> = {
-  "Yeni talep": "status-new", "Usta aranıyor": "status-search", "Teklif gönderildi": "status-offer", "Atandı": "status-assigned",
-  "Tamir sürüyor": "status-offer", "Onay bekliyor": "status-search", "Parça bekliyor": "status-search", "Teslimata hazır": "status-assigned", "Tamamlandı": "status-assigned", "İptal edildi": "status-new",
-};
-
-function mapRequest(row: Record<string, unknown>): RepairRequest {
-  const databaseStatus = String(row.status ?? "new");
-  const labels: Record<string, RequestStatus> = { new: "Yeni talep", reviewing: "Usta aranıyor", offered: "Teklif gönderildi", assigned: "Atandı", in_repair: "Tamir sürüyor", waiting_customer: "Onay bekliyor", waiting_parts: "Parça bekliyor", ready_for_delivery: "Teslimata hazır", with_courier: "Teslimata hazır", completed: "Tamamlandı", cancelled: "İptal edildi" };
-  const status = labels[databaseStatus] ?? "Yeni talep";
-  const customer = String(row.customer_name ?? "Müşteri");
-  const createdAt = row.created_at ? new Date(String(row.created_at)) : new Date();
-  return {
-    id: String(row.reference ?? row.id ?? ""), dbId: String(row.id ?? ""), customer,
-    customerPhone: row.customer_phone ? String(row.customer_phone) : undefined,
-    customerEmail: row.customer_email ? String(row.customer_email) : undefined,
-    initials: customer.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toLocaleUpperCase("tr-TR"),
-    device: String(row.device ?? ""), issue: String(row.issue ?? ""), district: String(row.district ?? ""),
-    created: new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul" }).format(createdAt),
-    status, priority: row.priority === "urgent" ? "Acil" : "Normal", statusRaw: databaseStatus,
-    offerId: row.offer_id ? String(row.offer_id) : undefined,
-    offerStatus: row.offer_status ? String(row.offer_status) : undefined,
-    description: String(row.description ?? ""), repairNotes: row.repair_notes ? String(row.repair_notes) : undefined, city: String(row.city ?? ""), imei: row.imei ? String(row.imei) : undefined,
-    deliveryAddress: row.delivery_address ? String(row.delivery_address) : undefined,
-    warrantyStatus: row.warranty_status ? String(row.warranty_status) : undefined, warrantyExpiresOn: row.warranty_expires_on ? String(row.warranty_expires_on) : undefined, warrantyCheckedAt: row.warranty_checked_at ? String(row.warranty_checked_at) : undefined,
-    assignedTechnician: row.technician_name ? String(row.technician_name) : undefined,
-    deliveryStatus: row.delivery_status ? String(row.delivery_status) as CourierJobStatus : undefined,
-    assignedCourierName: row.assigned_courier_name ? String(row.assigned_courier_name) : undefined,
-  };
-}
-
-function mapTechnician(row: Record<string, unknown>): Technician {
-  const name = String(row.full_name ?? "Usta");
-  return {
-    id: String(row.id ?? ""), name,
-    initials: name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toLocaleUpperCase("tr-TR"),
-    shop: String(row.shop_name ?? "Telefon tamir servisi"), district: String(row.district ?? ""), distance: "",
-    specialties: Array.isArray(row.specialties) ? row.specialties.map(String) : [],
-    rating: "Yeni", jobs: 0, available: Boolean(row.available),
-  };
-}
-
-function mapTechnicianJobStatus(request?: RepairRequest): TechnicianJobStatus {
-  if (!request) return "offer";
-  if (request.statusRaw === "cancelled") return "cancelled";
-  if (request.offerStatus === "declined") return "declined";
-  if (request.offerStatus === "cancelled") return "offer_closed";
-  if (request.offerStatus === "pending") return "offer";
-  if (request.statusRaw === "in_repair") return "repairing";
-  if (request.statusRaw === "waiting_customer") return "approval";
-  if (request.statusRaw === "waiting_parts") return "parts";
-  if (request.statusRaw === "completed" || request.statusRaw === "ready_for_delivery") return "completed";
-  return "accepted";
-}
-
-function mapRepairEvent(row: Record<string, unknown>): RepairEvent {
-  return {
-    id: String(row.id ?? ""), eventType: String(row.event_type ?? ""),
-    fromStatus: row.from_status ? String(row.from_status) : undefined,
-    toStatus: row.to_status ? String(row.to_status) : undefined,
-    actorName: row.actor_name ? String(row.actor_name) : undefined,
-    technicianName: row.technician_name ? String(row.technician_name) : undefined,
-    reference: String(row.reference ?? ""), device: String(row.device ?? ""),
-    issue: String(row.issue ?? ""), createdAt: String(row.created_at ?? ""),
-  };
-}
-
-function describeRepairEvent(event: RepairEvent) {
-  const actor = event.actorName ?? "Ekip üyesi";
-  if (event.eventType === "request_created") return `${actor} talep oluşturdu`;
-  if (event.eventType === "offer_sent") return `${actor}, ${event.technicianName ?? "bir ustaya"} için teklif gönderdi`;
-  if (event.eventType === "offer_accepted") return `${actor} teklifi kabul etti`;
-  if (event.eventType === "offer_declined") return `${actor} teklifi reddetti`;
-  if (event.eventType === "offer_cancelled") return `${event.technicianName ?? "Usta"} için bekleyen teklif kapatıldı`;
-  if (event.eventType === "warranty_checked") return `${actor} garanti sonucunu kaydetti`;
-  if (event.eventType === "repair_note_updated") return `${actor} işlem notunu güncelledi`;
-  if (event.eventType === "delivery_address_updated") return `${actor} teslimat adresini güncelledi`;
-  if (event.eventType === "status_changed") {
-    const statusLabels: Record<string, string> = {
-      new: "Yeni", reviewing: "Usta aranıyor", offered: "Teklif gönderildi", assigned: "Ustaya atandı",
-      in_repair: "Tamir sürüyor", waiting_customer: "Müşteri onayı bekliyor", waiting_parts: "Parça bekliyor",
-      ready_for_delivery: "Teslimata hazır", with_courier: "Kuryede", completed: "Tamamlandı", cancelled: "İptal edildi",
-    };
-    return `${actor} durumu “${statusLabels[event.toStatus ?? ""] ?? event.toStatus ?? "güncel"}” yaptı`;
-  }
-  return `${actor} talep üzerinde işlem yaptı`;
-}
-
-function formatRepairEventTime(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("tr-TR", {
-    day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul",
-  }).format(date);
-}
-
-function mapCustomerJobStatus(request?: RepairRequest): TechnicianJobStatus {
-  if (!request || ["new", "reviewing", "offered"].includes(request.statusRaw)) return "offer";
-  if (request.statusRaw === "assigned") return "accepted";
-  if (request.statusRaw === "in_repair") return "repairing";
-  if (request.statusRaw === "waiting_customer") return "approval";
-  if (request.statusRaw === "waiting_parts") return "parts";
-  if (request.statusRaw === "cancelled") return "cancelled";
-  return "completed";
-}
-
-function getDeviceCustody(request: RepairRequest): DeviceCustody {
-  if (request.deliveryStatus === "delivered") return { holder: "Müşteride", detail: "Cihaz teslim edildi", kind: "customer" };
-  if (request.deliveryStatus === "picked_up" || request.deliveryStatus === "returning") return { holder: "Kuryede", detail: request.assignedCourierName ?? "Teslimat sürüyor", kind: "courier" };
-  if (request.deliveryStatus === "at_shop") return { holder: "Ustada", detail: request.assignedTechnician ?? "Cihaz serviste", kind: "technician" };
-  if (!request.deliveryStatus && ["in_repair", "waiting_customer", "waiting_parts", "ready_for_delivery"].includes(request.statusRaw)) return { holder: "Ustada", detail: request.assignedTechnician ?? "Tamir süreci devam ediyor", kind: "technician" };
-  return { holder: "Müşteride", detail: request.deliveryStatus ? "Kurye teslim almayı bekliyor" : "Teslim alma bekleniyor", kind: "customer" };
-}
+import {
+  RequestStatus, RepairRequest, Technician, SentOffer, RepairEvent, Screen, TechnicianJobStatus, CourierJobStatus, Delivery, Courier, DeviceCustody, statusClass, mapRequest, mapTechnician, mapTechnicianJobStatus, mapRepairEvent, describeRepairEvent, formatRepairEventTime, mapCustomerJobStatus, getDeviceCustody,
+} from "./panel-data";
 
 export default function PanelDashboard({ user }: { user: CurrentUser }) {
   const roleName: Record<CurrentUser["role"], "Görevli" | "Admin" | "Usta" | "Kurye" | "Müşteri"> = { admin: "Admin", staff: "Görevli", technician: "Usta", courier: "Kurye", customer: "Müşteri" };
@@ -418,7 +283,7 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
   }
   const filteredRequests = useMemo(() => requests.filter((request) => {
     const matchesQuery = `${request.id} ${request.customer} ${request.device} ${request.issue} ${request.district}`.toLowerCase().includes(query.toLowerCase());
-    const matchesFilter = filter === "Tüm talepler" || (filter === "Yeni" ? request.status === "Yeni talep" : filter === "Usta aranıyor" ? request.status === "Usta aranıyor" : request.status === "Atandı");
+    const matchesFilter = filter === "Tüm talepler" || request.status === filter;
     return matchesQuery && matchesFilter;
   }), [filter, query, requests]);
   const pageCount = Math.max(1, Math.ceil(filteredRequests.length / 10));
@@ -548,9 +413,9 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
               <div className="panel-heading"><div><div className="title-line"><h2>1. Talebi seç</h2><span className="count-pill">{filteredRequests.length}</span></div><p>Seçtiğiniz talebin ayrıntıları sağda açılır.</p></div><button className="button button-secondary button-small" onClick={() => { setQuery(""); setFilter("Tüm talepler"); setRequestPage(1); }}><span>Tüm talepler</span><ArrowRight size={15} /></button></div>
               <div className="table-toolbar">
                 <label className="search-box"><Search size={16} /><input value={query} onChange={(event) => { setQuery(event.target.value); setRequestPage(1); }} placeholder="Talep, müşteri veya cihaz ara" /></label>
-                <div className="toolbar-right"><label className="filter-select"><Filter size={14}/><select value={filter} onChange={(event) => { setFilter(event.target.value); setRequestPage(1); }} aria-label="Talepleri filtrele"><option>Tüm talepler</option><option>Yeni</option><option>Usta aranıyor</option><option>Atandı</option></select><ChevronDown size={13}/></label></div>
+                <div className="toolbar-right"><label className="filter-select"><Filter size={14}/><select value={filter} onChange={(event) => { setFilter(event.target.value); setRequestPage(1); }} aria-label="Talepleri filtrele"><option>Tüm talepler</option><option>Yeni talep</option><option>Usta aranıyor</option><option>Teklif gönderildi</option><option>Atandı</option><option>Tamir sürüyor</option><option>Onay bekliyor</option><option>Parça bekliyor</option><option>Teslimata hazır</option><option>Tamamlandı</option></select><ChevronDown size={13}/></label></div>
               </div>
-              <div className="request-table-wrap"><table className="request-table"><thead><tr><th>MÜŞTERİ / CİHAZ</th><th>ARIZA</th><th>KONUM</th><th>DURUM / CİHAZ KİMDE</th><th>GELİŞ</th><th><span className="sr-only">İşlem</span></th></tr></thead><tbody>{visibleRequests.map((request) => { const custody = getDeviceCustody(request); const CustodyIcon = custody.kind === "courier" ? Truck : custody.kind === "technician" ? Wrench : Smartphone; return <tr key={request.id} onClick={() => { setSelectedId(request.id); setDetailRequestId(request.id); }} className={selectedId === request.id ? "row-selected" : ""} tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter") { setSelectedId(request.id); setDetailRequestId(request.id); } }}><td><div className="customer-cell"><div className={`avatar avatar-${request.initials.length}`}>{request.initials}</div><div className="customer-info"><strong>{request.customer}{request.priority === "Acil" && <span className="urgent-mark" title="Öncelikli talep">!</span>}</strong><span>{request.id} <i/> {request.device}</span></div></div></td><td className="issue-cell">{request.issue}</td><td><span className="location-cell"><MapPin size={13}/>{request.district}</span></td><td><div className="request-status-stack"><span className={`status-badge ${statusClass[request.status]}`}><i/>{request.status}</span><span className={`custody-chip custody-${custody.kind}`}><CustodyIcon size={14}/><strong>{custody.holder}</strong></span><small>{custody.detail}</small></div></td><td className="time-cell">{request.created}</td><td><button className="row-more" aria-label={`${request.id} detaylarını aç`} onClick={(event) => { event.stopPropagation(); setSelectedId(request.id); setDetailRequestId(request.id); }}><MoreHorizontal size={17}/></button></td></tr>; })}</tbody></table>{filteredRequests.length === 0 && <div className="empty-results"><Search size={20}/><strong>Sonuç bulunamadı</strong><span>Arama veya filtre kriterlerini değiştirebilirsin.</span></div>}</div>
+              <div className="request-table-wrap"><table className="request-table"><thead><tr><th>MÜŞTERİ / CİHAZ</th><th>ARIZA</th><th>KONUM</th><th>DURUM / CİHAZ KİMDE</th><th>GELİŞ</th><th><span className="sr-only">İşlem</span></th></tr></thead><tbody>{visibleRequests.map((request) => { const custody = getDeviceCustody(request); const CustodyIcon = custody.kind === "courier" ? Truck : custody.kind === "technician" ? Wrench : Smartphone; return <tr key={request.id} onClick={() => { setSelectedId(request.id); setDetailRequestId(request.id); }} className={selectedId === request.id ? "row-selected" : ""} tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter") { setSelectedId(request.id); setDetailRequestId(request.id); } }}><td data-label="Müşteri / cihaz"><div className="customer-cell"><div className={`avatar avatar-${request.initials.length}`}>{request.initials}</div><div className="customer-info"><strong>{request.customer}{request.priority === "Acil" && <span className="urgent-mark" title="Öncelikli talep">!</span>}</strong><span>{request.id} <i/> {request.device}</span></div></div></td><td data-label="Arıza" className="issue-cell">{request.issue}</td><td data-label="Konum"><span className="location-cell"><MapPin size={13}/>{request.district}</span></td><td data-label="Durum / cihaz kimde"><div className="request-status-stack"><span className={`status-badge ${statusClass[request.status]}`}><i/>{request.status}</span><span className={`custody-chip custody-${custody.kind}`}><CustodyIcon size={14}/><strong>{custody.holder}</strong></span><small>{custody.detail}</small></div></td><td data-label="Geliş" className="time-cell">{request.created}</td><td data-label="İşlem"><button className="row-more" aria-label={`${request.id} detaylarını aç`} onClick={(event) => { event.stopPropagation(); setSelectedId(request.id); setDetailRequestId(request.id); }}><MoreHorizontal size={17}/></button></td></tr>; })}</tbody></table>{filteredRequests.length === 0 && <div className="empty-results"><Search size={20}/><strong>Sonuç bulunamadı</strong><span>Arama veya filtre kriterlerini değiştirebilirsin.</span></div>}</div>
               <section className="queue-activity" aria-label="Son operasyon hareketleri">
                 <div className="queue-activity-heading"><h3>Son hareketler</h3><span>En yeni 3 kayıt</span></div>
                 <div className="queue-activity-list">

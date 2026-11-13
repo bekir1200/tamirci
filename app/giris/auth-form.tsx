@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ArrowRight, LoaderCircle, UserRoundPlus } from "lucide-react";
 import { signInWithCredentials } from "./actions";
 
-type AuthFormProps = { mode: "login" | "register"; error?: string };
+type AuthFormProps = { mode: "login" | "register"; error?: string; notice?: string };
 
 const messages: Record<string, string> = {
   CredentialsSignin: "E-posta veya parola hatalı.",
+  RateLimited: "Çok fazla deneme yapıldı. Lütfen 15 dakika sonra tekrar dene.",
+  EmailNotVerified: "Hesabını henüz doğrulamadın. E-postana gelen bağlantıyı aç; bağlantı yoksa parolanı sıfırlayarak doğrulayabilirsin.",
+  VerificationFailed: "Doğrulama bağlantısı geçersiz veya süresi dolmuş. Parolanı sıfırlayarak yeni bağlantı alabilirsin.",
   MissingCSRF: "Giriş güvenlik doğrulaması yenilenemedi. Sayfayı yenileyip tekrar dene.",
   Configuration: "Giriş ayarları tamamlanmamış. Biraz sonra tekrar dene.",
   Default: "İşlem tamamlanamadı. Bilgilerini kontrol edip tekrar dene.",
@@ -18,10 +22,11 @@ function redirectTarget() {
   return candidate?.startsWith("/") && !candidate.startsWith("//") ? candidate : "/panel";
 }
 
-export default function AuthForm({ mode, error }: AuthFormProps) {
+export default function AuthForm({ mode, error, notice }: AuthFormProps) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState(error ? messages[error] ?? messages.Default : "");
   const [success, setSuccess] = useState(false);
+  const [registered, setRegistered] = useState("");
 
   async function submit(formData: FormData) {
     setPending(true);
@@ -56,9 +61,15 @@ export default function AuthForm({ mode, error }: AuthFormProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, password }),
         });
-        const result = (await response.json()) as { error?: string };
+        const result = (await response.json()) as { error?: string; verificationRequired?: boolean };
         if (!response.ok) {
           setMessage(result.error ?? messages.Default);
+          setPending(false);
+          return;
+        }
+        if (result.verificationRequired) {
+          // Doğrulama gerektiğinde otomatik giriş yapılmaz; kullanıcı bağlantıyı açar.
+          setRegistered("Hesabın oluşturuldu. E-posta adresine doğrulama bağlantısı gönderdik; bağlantıyı açtıktan sonra giriş yapabilirsin.");
           setPending(false);
           return;
         }
@@ -99,6 +110,7 @@ export default function AuthForm({ mode, error }: AuthFormProps) {
         <span>Parola</span>
         <input name="password" type="password" autoComplete={mode === "register" ? "new-password" : "current-password"} placeholder={mode === "register" ? "En az 10 karakter" : "Parolanız"} required minLength={mode === "register" ? 10 : 1} maxLength={128} />
       </label>
+      {mode === "login" && <Link className="credentials-forgot" href="/parola-sifirla">Parolanı mı unuttun?</Link>}
       {mode === "register" && (
         <label className="credentials-field">
           <span>Parola tekrarı</span>
@@ -107,6 +119,8 @@ export default function AuthForm({ mode, error }: AuthFormProps) {
       )}
       {message && <p className="credentials-message" role="alert">{message}</p>}
       {success && <p className="credentials-success" role="status">Hesabın oluşturuldu, yönlendiriliyorsun.</p>}
+      {registered && <p className="credentials-success" role="status">{registered}</p>}
+      {!message && !registered && notice && <p className="credentials-success" role="status">{notice}</p>}
       <button className="credentials-submit" type="submit" disabled={pending}>
         {pending ? <LoaderCircle className="credentials-spinner" size={20} /> : mode === "register" ? <UserRoundPlus size={19} /> : <ArrowRight size={19} />}
         {pending ? "İşleniyor…" : mode === "register" ? "Hesap oluştur" : "Giriş yap"}

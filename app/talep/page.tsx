@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock3, ShieldCheck, Smartphone, Wrench } from "lucide-react";
 import { phoneModels } from "@/lib/phone-models";
+import { provinces } from "@/lib/provinces";
 import { PhoneCombobox } from "./phone-combobox";
 
 const issues = ["Ekran değişimi", "Pil değişimi", "Şarj soketi", "Kamera arızası", "Ses / mikrofon sorunu", "Diğer"];
@@ -161,13 +162,13 @@ export default function RepairRequestPage() {
                 <div className="request-form-grid">
                   <label className="request-field"><span>Ad soyad</span><input name="customer" autoComplete="name" placeholder="Adın ve soyadın" minLength={2} maxLength={80} required /></label>
                   <label className="request-field"><span>Telefon numarası</span><input name="phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="05xx xxx xx xx" pattern="[+]?[0-9 ()-]{10,20}" title="Geçerli bir telefon numarası gir." required /></label>
-                  <label className="request-field"><span>İl</span><input name="city" autoComplete="address-level1" placeholder="İl" maxLength={50} required /></label>
+                  <label className="request-field"><span>İl</span><span className="request-select-wrap"><select name="city" autoComplete="address-level1" defaultValue="" required><option value="" disabled>İl seç</option>{provinces.map((province) => <option key={province}>{province}</option>)}</select><span aria-hidden="true" className="request-select-chevron" /></span></label>
                   <label className="request-field"><span>İlçe</span><input name="district" autoComplete="address-level2" placeholder="İlçe" maxLength={50} required /></label>
                   <label className="request-field request-field-full"><span>Cihazın alınacağı adres <small>Kurye istersen</small></span><textarea name="deliveryAddress" autoComplete="street-address" placeholder="Mahalle, sokak, bina ve daire" rows={3} maxLength={300} /></label>
                 </div>
               </div>
 
-              <label className="request-consent"><input type="checkbox" name="contactConsent" required /><span>Bu talep hakkında benimle iletişime geçilmesini kabul ediyorum.</span></label>
+              <label className="request-consent"><input type="checkbox" name="contactConsent" required /><span>Bu talep hakkında benimle iletişime geçilmesini kabul ediyorum. <Link href="/kvkk">Aydınlatma metni</Link></span></label>
               <p className="request-form-error" data-form-error tabIndex={-1} role="alert" hidden={!formError}>{formError}{needsSignIn && <> <a href="/giris?mod=kayit&amp;next=%2Ftalep">Giriş yap veya hesap oluştur</a></>}</p>
               <button className="request-submit" type="submit" disabled={saving} aria-busy={saving}>
                 {saving ? "Talebin kaydediliyor" : "Tamir talebimi oluştur"}{saving ? <span className="request-spinner" aria-hidden="true" /> : <ArrowRight size={18} />}

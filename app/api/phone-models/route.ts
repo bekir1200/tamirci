@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { clientIp, consumeRateLimit } from "@/lib/rate-limit";
+
+export const runtime = "nodejs";
 
 const base = "https://gettechapi.github.io/TechAPI/v1/smartphones";
 type IndexEntry = { slug: string; name: string };
@@ -8,6 +11,14 @@ export async function GET(request: NextRequest) {
   const brand = (request.nextUrl.searchParams.get("brand") ?? "").trim();
   const search = (request.nextUrl.searchParams.get("q") ?? "").trim();
   if (brand.length < 2 || brand.length > 50 || search.length < 2 || search.length > 60) return NextResponse.json({ models: [] });
+  // Dış kaynağı korumak için IP başına dakikada en fazla 60 arama.
+  try {
+    if (!(await consumeRateLimit(`phone:${clientIp(request)}`, 60, 1))) {
+      return NextResponse.json({ models: [] }, { status: 429 });
+    }
+  } catch {
+    return NextResponse.json({ models: [] }, { status: 503 });
+  }
   try {
     if (!indexCache || indexCache.expiresAt <= Date.now()) {
       const response = await fetch(`${base}/index.json`, { cache: "no-store" });

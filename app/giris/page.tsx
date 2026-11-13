@@ -35,8 +35,9 @@ function MicrosoftMark() {
   );
 }
 
-export default async function SignInPage({ searchParams }: { searchParams: Promise<{ error?: string; mod?: string; next?: string }> }) {
-  const { error, mod, next } = await searchParams;
+export default async function SignInPage({ searchParams }: { searchParams: Promise<{ error?: string; mod?: string; next?: string; verified?: string }> }) {
+  const { error, mod, next, verified } = await searchParams;
+  const verifiedNotice = verified === "1" ? "E-posta adresin doğrulandı. Şimdi giriş yapabilirsin." : undefined;
   const mode = mod === "kayit" ? "register" : "login";
   const redirectTo = next?.startsWith("/") && !next.startsWith("//") ? next : "/panel";
   const loginHref = next ? `/giris?next=${encodeURIComponent(redirectTo)}` : "/giris";
@@ -73,7 +74,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
           <Link href={loginHref} className={mode === "login" ? "active" : ""} aria-current={mode === "login" ? "page" : undefined}>Giriş yap</Link>
           <Link href={registerHref} className={mode === "register" ? "active" : ""} aria-current={mode === "register" ? "page" : undefined}>Hesap oluştur</Link>
         </nav>
-        <AuthForm key={mode} mode={mode} error={error} />
+        <AuthForm key={mode} mode={mode} error={error} notice={verifiedNotice} />
 
         {(googleReady || microsoftReady) && (<>
         <div className="login-providers">

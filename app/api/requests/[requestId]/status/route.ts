@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { AuthenticationRequiredError, getCurrentUser, PermissionDeniedError } from "@/lib/authorization";
 import { withTransaction } from "@/lib/db";
+import { notifyCustomerOfStatus } from "@/lib/notifications";
 import type { AppRole } from "@/types/next-auth";
 
 export const runtime = "nodejs";
@@ -9,7 +10,7 @@ type RouteContext = { params: Promise<{ requestId: string }> };
 const validStatuses = new Set(["reviewing", "in_repair", "waiting_customer", "waiting_parts", "ready_for_delivery", "cancelled"]);
 const technicianTransitions: Record<string, string[]> = {
   assigned: ["in_repair"],
-  in_repair: ["waiting_customer", "waiting_parts", "ready_for_delivery", "completed"],
+  in_repair: ["waiting_customer", "waiting_parts", "ready_for_delivery"],
   waiting_parts: ["in_repair"],
 };
 
@@ -82,6 +83,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     });
 
     if ("error" in result) return NextResponse.json({ error: result.error }, { status: result.httpStatus });
+    await notifyCustomerOfStatus(requestId, nextStatus);
     return NextResponse.json({ request: result });
   } catch (error) {
     return statusError(error);
