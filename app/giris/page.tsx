@@ -75,6 +75,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
         </nav>
         <AuthForm key={mode} mode={mode} error={error} />
 
+        {(googleReady || microsoftReady) && (<>
         <div className="login-providers">
           <form action={signInWithGoogle}>
             <button className="login-provider-button" type="submit" disabled={!googleReady}>
@@ -93,6 +94,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
         </div>
 
         <div className="login-divider"><span>VEYA</span></div>
+        </>)}
 
         <div className="login-privacy"><CheckCircle2 size={18} /><span>{mode === "register" ? "Parolan güvenli şekilde özetlenir ve hesabında saklanır." : "Parolan güvenli bağlantı üzerinden doğrulanır."}</span></div>
       </section>

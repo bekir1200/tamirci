@@ -35,7 +35,7 @@ export default function LandingPage() {
             <Link className="button-primary" href="/talep">Tamir talebi oluştur <ArrowRight size={17} /></Link>
             <a className="button-secondary" href="#hizmetler">Hizmetleri gör <ArrowDownRight size={17} /></a>
           </div>
-          <div className="hero-assurance"><div className="assurance-avatars"><span>CT</span><span><Wrench size={12} /></span><span><Check size={12} /></span></div><p><strong>Her adımda kontrol sende</strong><br />Talebin ve cihazın takip edilebilir.</p></div>
+          <div className="hero-assurance"><div className="assurance-avatars"><span><Smartphone size={12} /></span><span><Wrench size={12} /></span><span><Check size={12} /></span></div><p><strong>Her adımda kontrol sende</strong><br />Talebin ve cihazın takip edilebilir.</p></div>
         </div>
 
         <div className="hero-visual" aria-label="Cep telefonu tamir sürecinin temsili görünümü">
@@ -78,7 +78,7 @@ export default function LandingPage() {
         <div className="services-grid">{services.map(({ icon: Icon, title, detail }) => <article className="service-card" key={title}><div className="service-icon"><Icon size={21} /></div><div><h3>{title}</h3><p>{detail}</p></div><ChevronRight size={17} className="service-arrow" /></article>)}</div>
       </section>
 
-      <section className="landing-cta"><div><span className="section-kicker">CEPTAMİR YANINDA</span><h2>Telefonun için ilk adımı at.</h2><p>Talebini oluştur, gerisini birlikte takip edelim.</p></div><Link href="/talep" className="button-light">Ücretsiz talep oluştur <ArrowRight size={17} /></Link><div className="cta-decoration" /></section>
+      <section className="landing-cta"><div><span className="section-kicker">ALOJETCEP YANINDA</span><h2>Telefonun için ilk adımı at.</h2><p>Talebini oluştur, gerisini birlikte takip edelim.</p></div><Link href="/talep" className="button-light">Ücretsiz talep oluştur <ArrowRight size={17} /></Link><div className="cta-decoration" /></section>
 
       <footer className="landing-footer"><Link className="landing-brand footer-brand" href="/"><Image className="landing-brand-logo" src="/brand/alojetcep-logo.png" alt="AloJetCep" width={280} height={196} /></Link><span>Telefon tamirinde kolay ve şeffaf bir deneyim.</span><span>© 2026 AloJetCep</span></footer>
     </main>

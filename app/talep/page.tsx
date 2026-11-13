@@ -2,12 +2,34 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock3, ShieldCheck, Smartphone, Wrench } from "lucide-react";
 import { phoneModels } from "@/lib/phone-models";
 import { PhoneCombobox } from "./phone-combobox";
 
 const issues = ["Ekran değişimi", "Pil değişimi", "Şarj soketi", "Kamera arızası", "Ses / mikrofon sorunu", "Diğer"];
+// Taslak yalnızca bu tarayıcıda tutulur; IMEI bilinçli olarak kaydedilmez.
+const DRAFT_KEY = "alojetcep-request-draft";
+const DRAFT_FIELDS = ["brand", "model", "issue", "description", "customer", "phone", "city", "district", "deliveryAddress"] as const;
+
+function readDraft(): Record<string, unknown> | null {
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+  } catch { return null; }
+}
+
+function saveDraft(form: HTMLFormElement) {
+  try {
+    const data = new FormData(form);
+    const draft = Object.fromEntries(DRAFT_FIELDS.map((key) => [key, String(data.get(key) ?? "")]));
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch { /* Storage may be unavailable (private mode); the form still works. */ }
+}
+
+function clearDraft() {
+  try { window.localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+}
 
 export default function RepairRequestPage() {
   const [submittedId, setSubmittedId] = useState("");
@@ -17,6 +39,22 @@ export default function RepairRequestPage() {
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [catalogModels, setCatalogModels] = useState<string[]>([]);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Giriş yönlendirmesinden sonra yarım kalan formu geri yükle.
+  useEffect(() => {
+    const draft = readDraft();
+    const form = formRef.current;
+    if (!draft || !form) return;
+    for (const key of DRAFT_FIELDS) {
+      const field = form.elements.namedItem(key);
+      if ((field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement || field instanceof HTMLSelectElement) && typeof draft[key] === "string") {
+        field.value = draft[key] as string;
+      }
+    }
+    if (typeof draft.brand === "string") setBrand(draft.brand);
+    if (typeof draft.model === "string") setModel(draft.model);
+  }, []);
 
   useEffect(() => {
     setCatalogModels([]);
@@ -63,6 +101,7 @@ export default function RepairRequestPage() {
       }
       if (!response.ok || !result.request?.reference) throw new Error(result.error ?? "Talep oluşturulamadı. Bilgilerini kontrol edip tekrar dene.");
       setSubmittedId(result.request.reference);
+      clearDraft();
       form.reset();
       setBrand("");
       setModel("");
@@ -99,12 +138,13 @@ export default function RepairRequestPage() {
               <p>Talep numaranı not et. Ekibimiz bilgilerini inceleyip seninle iletişime geçecek.</p>
               <div className="request-reference"><span>Talep numaran</span><strong>{submittedId}</strong></div>
               <div className="request-success-actions">
-                <Link className="request-submit" href="/">Ana sayfaya dön <ArrowRight size={18} /></Link>
+                <Link className="request-submit" href="/panel">Talebimi panelde takip et <ArrowRight size={18} /></Link>
+                <Link className="request-another" href="/">Ana sayfaya dön</Link>
                 <button className="request-another" type="button" onClick={() => setSubmittedId("")}>Yeni talep oluştur</button>
               </div>
             </section>
           ) : (
-            <form className="customer-request-form" onSubmit={submitRequest}>
+            <form className="customer-request-form" onSubmit={submitRequest} onChange={(event) => saveDraft(event.currentTarget)} ref={formRef}>
               <div className="request-form-section">
                 <div className="request-section-title"><span>01</span><div><h2>Cihaz bilgileri</h2><p>Ustanın doğru hazırlık yapmasına yardımcı olur.</p></div></div>
                 <div className="request-form-grid">
