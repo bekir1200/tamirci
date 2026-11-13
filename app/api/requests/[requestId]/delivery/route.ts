@@ -41,17 +41,20 @@ export async function POST(request: Request, context: RouteContext) {
       let fromStatus: string | null;
       let previousCourierId: string | null = null;
       if (existing) {
-        if (!["assigned", "accepted"].includes(existing.status)) {
-          return { error: "Kurye yalnızca görev başlamadan önce değiştirilebilir.", status: 409 } as const;
+        // Kurye cihazı taşımıyorken (görev başlamadı ya da cihaz dükkânda) değiştirilebilir.
+        // Cihaz dükkândayken yeni kurye doğrudan "dükkânda" aşamasından devam eder.
+        if (!["assigned", "accepted", "at_shop"].includes(existing.status)) {
+          return { error: "Kurye yalnızca cihaz yoldayken değil, görev başlamadan ya da cihaz dükkândayken değiştirilebilir.", status: 409 } as const;
         }
         if (existing.courier_id === courierId) return { error: "Bu kurye göreve zaten atanmış.", status: 409 } as const;
+        const nextDeliveryStatus = existing.status === "at_shop" ? "at_shop" : "assigned";
         deliveryId = existing.id;
         eventType = "delivery_reassigned";
         fromStatus = existing.status;
         previousCourierId = existing.courier_id;
         await client.query(
-          `UPDATE repair_deliveries SET courier_id = $1, assigned_by = $2, status = 'assigned', updated_at = now() WHERE id = $3`,
-          [courierId, actor.id, deliveryId],
+          `UPDATE repair_deliveries SET courier_id = $1, assigned_by = $2, status = $3, updated_at = now() WHERE id = $4`,
+          [courierId, actor.id, nextDeliveryStatus, deliveryId],
         );
       } else {
         deliveryId = randomUUID();
@@ -64,8 +67,8 @@ export async function POST(request: Request, context: RouteContext) {
       }
       await client.query(
         `INSERT INTO repair_events (request_id, actor_id, event_type, from_status, to_status, details)
-         VALUES ($1, $2, $3, $4, 'assigned', $5::jsonb)`,
-        [requestId, actor.id, eventType, fromStatus, JSON.stringify({ deliveryId, courierId, previousCourierId })],
+         VALUES ($1, $2, $3, $4, $5, $6::jsonb)`,
+        [requestId, actor.id, eventType, fromStatus, fromStatus === "at_shop" ? "at_shop" : "assigned", JSON.stringify({ deliveryId, courierId, previousCourierId })],
       );
       const data = await client.query(`${deliveryProjection} WHERE d.id = $1`, [deliveryId]);
       return { delivery: data.rows[0] } as const;

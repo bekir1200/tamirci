@@ -27,6 +27,8 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
   const [requestsLoading, setRequestsLoading] = useState(true);
   const [requestsError, setRequestsError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  // /api/live değişim gördüğünde artar; bağlı tüm ekran verileri sessizce yeniden yüklenir.
+  const [liveTick, setLiveTick] = useState(0);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [query, setQuery] = useState("");
@@ -96,10 +98,32 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
         if (active && !silent) setRequestsLoading(false);
       }
     }
-    void loadData();
+    void loadData(liveTick > 0);
     const timer = window.setInterval(() => { if (document.visibilityState === "visible") void loadData(true); }, 15000);
     return () => { active = false; window.clearInterval(timer); };
-  }, [screen, reloadKey]);
+  }, [screen, reloadKey, liveTick]);
+
+  // Değişim işaretini kısa aralıklarla kontrol eder; yalnızca değişiklik olduğunda veri çeker.
+  useEffect(() => {
+    let active = true;
+    let lastStamp: string | null = null;
+    async function checkLive() {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const response = await fetch("/api/live", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = await response.json() as { stamp?: string };
+        if (!active || !data.stamp) return;
+        if (lastStamp !== null && data.stamp !== lastStamp) setLiveTick((tick) => tick + 1);
+        lastStamp = data.stamp;
+      } catch {
+        // Ağ hatasında bir sonraki kontrol denenir.
+      }
+    }
+    void checkLive();
+    const timer = window.setInterval(() => void checkLive(), 3000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, []);
 
   useEffect(() => {
     if (screen !== "dispatch" || !selected?.dbId) return;
@@ -117,7 +141,7 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
     void loadOffers();
     const timer = window.setInterval(() => { if (document.visibilityState === "visible") void loadOffers(); }, 15000);
     return () => { active = false; window.clearInterval(timer); };
-  }, [screen, selected?.dbId, selected?.id]);
+  }, [screen, selected?.dbId, selected?.id, liveTick]);
 
   async function loadDeliveries(silent = false) {
     if (!silent) { setDeliveryLoading(true); setDeliveryError(""); }
@@ -138,6 +162,9 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
       setCouriers(data.couriers ?? []);
     }).catch((error: unknown) => setDeliveryError(error instanceof Error ? error.message : "Kuryeler yüklenemedi."));
   }, [screen]);
+  useEffect(() => {
+    if (screen === "courier" && liveTick > 0 && !deliveryPending) void loadDeliveries(true);
+  }, [liveTick]);
   useEffect(() => {
     if (screen !== "courier" || deliveryPending) return;
     const timer = window.setInterval(() => { if (document.visibilityState === "visible") void loadDeliveries(true); }, 15000);
@@ -190,13 +217,14 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
     if (focusInput) target.querySelector<HTMLInputElement>("input")?.focus();
   }
 
+  useEffect(() => { setEventHistory([]); }, [trackedRequest?.dbId]);
+
   useEffect(() => {
     if (!trackedRequest?.dbId) {
       setEventHistory([]);
       return;
     }
     let active = true;
-    setEventHistory([]);
     const loadEvents = () => fetch(`/api/requests/${trackedRequest.dbId}/events`, { cache: "no-store" })
       .then(async (response) => response.ok ? await response.json() as { events?: Record<string, unknown>[] } : null)
       .then((data) => { if (active) setEventHistory((data?.events ?? []).map(mapRepairEvent)); })
@@ -204,7 +232,7 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
     void loadEvents();
     const timer = window.setInterval(() => { if (document.visibilityState === "visible") void loadEvents(); }, 15000);
     return () => { active = false; window.clearInterval(timer); };
-  }, [trackedRequest?.dbId]);
+  }, [trackedRequest?.dbId, liveTick]);
 
   useEffect(() => {
     if (!detailRequest?.dbId) { setDetailEvents([]); return; }
@@ -214,7 +242,7 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
       .then((data) => { if (active) setDetailEvents((data?.events ?? []).map(mapRepairEvent)); })
       .catch(() => { if (active) setDetailEvents([]); });
     return () => { active = false; };
-  }, [detailRequest?.dbId]);
+  }, [detailRequest?.dbId, liveTick]);
 
   useEffect(() => {
     if (!detailRequestId) return;
@@ -430,7 +458,7 @@ export default function PanelDashboard({ user }: { user: CurrentUser }) {
               <div className="matching-heading"><div><div className="title-line"><h2>2. Ustaya teklif gönder</h2><span className="live-pill"><span/> CANLI</span></div><p>Ustaların müsaitliğini ve ilçesini kontrol edip teklif gönder.</p></div></div>
               <div className="selected-request"><div className="selected-request-top"><span className="selected-label">SEÇİLİ TALEP</span><span className="request-code">{selected?.id}</span></div><div className="selected-device"><div className="device-icon"><Smartphone size={20}/></div><div><strong>{selected?.device}</strong><span>{selected?.issue}</span></div><span className={`status-badge compact ${statusClass[selected?.status ?? "Yeni talep"]}`}><i/>{selected?.status}</span></div><div className="selected-meta"><span><UserRound size={13}/>{selected?.customer}</span><span><MapPin size={13}/>{selected?.district}</span>{selected?.imei && <span>IMEI: {selected.imei}</span>}</div></div>
               <div className={`selected-custody custody-${selectedCustody.kind}`}><div className="custody-icon">{selectedCustody.kind === "courier" ? <Truck size={20}/> : selectedCustody.kind === "technician" ? <Wrench size={20}/> : <Smartphone size={20}/>}</div><div><span>CİHAZ ŞU ANDA KİMDE?</span><strong>{selectedCustody.holder}</strong><small>{selectedCustody.detail}</small></div><span className="custody-live"><i/>Güncel</span></div>
-              <div className="delivery-assignment"><h3>Kurye ataması</h3>{selected && <DeliveryAddress key={selected.dbId} requestId={selected.dbId} initialAddress={selected.deliveryAddress} disabled={["completed", "cancelled"].includes(selected.statusRaw)} onSaved={(address) => { setRequests((current) => current.map((item) => item.dbId === selected.dbId ? { ...item, deliveryAddress: address } : item)); void refreshRecentActivity(); }} />}{selected?.assignedCourierName && <p>Atanan kurye: <strong>{selected.assignedCourierName}</strong></p>}{selected && (!selected.deliveryStatus || ["assigned", "accepted"].includes(selected.deliveryStatus)) && <><label htmlFor="courier-select">Kurye seç</label><select id="courier-select" value={courierId} onChange={(event) => setCourierId(event.target.value)}><option value="">Kurye seçin</option>{couriers.map((courier) => <option key={courier.id} value={courier.id}>{courier.full_name}{courier.district ? ` · ${courier.district}` : ""}</option>)}</select><button className="button button-primary" disabled={!courierId || deliveryPending} aria-busy={deliveryPending} onClick={assignCourier}>{deliveryPending ? "Kaydediliyor…" : selected.deliveryStatus ? "Kuryeyi değiştir" : "Kurye ata"}</button>{couriers.length === 0 && !deliveryError && <p>Atanabilecek kurye bulunamadı.</p>}</>}{deliveryError && <p role="alert">{deliveryError}</p>}</div>
+              <div className="delivery-assignment"><h3>Kurye ataması</h3>{selected && <DeliveryAddress key={selected.dbId} requestId={selected.dbId} initialAddress={selected.deliveryAddress} disabled={["completed", "cancelled"].includes(selected.statusRaw)} onSaved={(address) => { setRequests((current) => current.map((item) => item.dbId === selected.dbId ? { ...item, deliveryAddress: address } : item)); void refreshRecentActivity(); }} />}{selected?.assignedCourierName && <p>Atanan kurye: <strong>{selected.assignedCourierName}</strong></p>}{selected && (!selected.deliveryStatus || ["assigned", "accepted", "at_shop"].includes(selected.deliveryStatus)) && <><label htmlFor="courier-select">Kurye seç</label><select id="courier-select" value={courierId} onChange={(event) => setCourierId(event.target.value)}><option value="">Kurye seçin</option>{couriers.map((courier) => <option key={courier.id} value={courier.id}>{courier.full_name}{courier.district ? ` · ${courier.district}` : ""}</option>)}</select><button className="button button-primary" disabled={!courierId || deliveryPending} aria-busy={deliveryPending} onClick={assignCourier}>{deliveryPending ? "Kaydediliyor…" : selected.deliveryStatus ? "Kuryeyi değiştir" : "Kurye ata"}</button>{couriers.length === 0 && !deliveryError && <p>Atanabilecek kurye bulunamadı.</p>}</>}{deliveryError && <p role="alert">{deliveryError}</p>}</div>
               <div className="match-summary"><span><strong>{visibleAvailableTechnicians}</strong> müsait usta bulundu</span><button className="text-button" aria-pressed={sameDistrictOnly} onClick={() => setSameDistrictOnly((current) => !current)}><SlidersHorizontal size={13}/> {sameDistrictOnly ? "Tüm ilçeler" : "Aynı ilçe"}</button></div>
               <div className="matching-tabs" role="tablist"><button role="tab" aria-selected={tab === "Uygun ustalar"} className={tab === "Uygun ustalar" ? "tab-active" : ""} onClick={() => setTab("Uygun ustalar")}>Ustalar <span>{visibleAvailableTechnicians}</span></button><button role="tab" aria-selected={tab === "Teklif geçmişi"} className={tab === "Teklif geçmişi" ? "tab-active" : ""} onClick={() => setTab("Teklif geçmişi")}>Teklif geçmişi</button></div>
               {tab === "Uygun ustalar" ? <div className="technician-list">{visibleTechnicians.map((technician, index) => { const alreadySent = selectedOffers.some((offer) => offer.technicianId === technician.id); return <article className="technician-card" key={technician.id}><div className="technician-top"><div className={`avatar tech-avatar tech-${index}`}>{technician.initials}</div><div className="technician-identity"><div className="technician-name">{technician.name}</div><span>{technician.shop}</span></div></div><div className="technician-details"><span><MapPin size={12}/>{technician.district || "Konum belirtilmemiş"}</span></div><div className="specialty-list">{technician.specialties.map((specialty) => <span key={specialty}>{specialty}</span>)}</div><div className="technician-action"><span className={technician.available ? "availability available" : "availability unavailable"}><i/>{technician.available ? "Müsait" : "Meşgul"}</span><button className={`button ${alreadySent ? "button-sent" : "button-offer"}`} disabled={!technician.available || alreadySent || offerPending || !selected || !["new", "reviewing", "offered"].includes(selected.statusRaw)} onClick={() => sendOffer(technician)}>{alreadySent ? <><Check size={14}/> Gönderildi</> : "Teklif gönder"}</button></div></article>; })}</div> : <div className="history-list">{selectedOffers.length ? selectedOffers.map((offer) => <div className="history-item" key={`${offer.requestId}-${offer.technician}`}><div className="history-icon"><Check size={15}/></div><div><strong>{offer.technician}</strong><span>{offer.status === "accepted" ? "Kabul edildi" : offer.status === "declined" ? "Reddedildi" : offer.status === "cancelled" ? "Kapatıldı" : "Yanıt bekleniyor"}</span></div><time>{formatRepairEventTime(offer.createdAt)}</time></div>) : <div className="history-empty"><Clock3 size={21}/><strong>Henüz teklif yok</strong><span>Bu talep için gönderilen teklifler burada görünecek.</span></div>}</div>}
