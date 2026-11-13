@@ -8,6 +8,7 @@ const statusMessages: Record<string, { subject: string; text: string }> = {
   waiting_parts: { subject: "Parça bekleniyor", text: "Tamir için gereken parça bekleniyor. Gelişmeleri sana bildireceğiz." },
   ready_for_delivery: { subject: "Cihazın hazır", text: "Tamir tamamlandı; cihazın teslimat için hazır." },
   cancelled: { subject: "Talebin iptal edildi", text: "Talebin iptal edildi. Sorunuz varsa ekibimizle iletişime geçebilirsin." },
+  delivered: { subject: "Cihazın teslim edildi", text: "Cihazın teslim edildi ve talebin tamamlandı. Bizi tercih ettiğin için teşekkür ederiz." },
 };
 
 // Talep durumu değiştiğinde müşteriye e-posta gönderir. Hata talep işlemini bozmaz.

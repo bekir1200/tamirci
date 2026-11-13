@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { AuthenticationRequiredError, getCurrentUser, PermissionDeniedError } from "@/lib/authorization";
 import { withTransaction } from "@/lib/db";
 import { deliveryProjection, deliveryStatuses, nextCourierStatus, type DeliveryStatus } from "@/lib/deliveries";
+import { notifyCustomerOfStatus } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 type RouteContext = { params: Promise<{ deliveryId: string }> };
@@ -78,6 +79,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       return { delivery: updated.rows[0] } as const;
     });
     if ("error" in outcome) return NextResponse.json({ error: outcome.error }, { status: outcome.status });
+    if (nextStatus === "delivered") await notifyCustomerOfStatus(outcome.delivery.request_id, "delivered");
     return NextResponse.json({ delivery: outcome.delivery });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return NextResponse.json({ error: "Giriş yapman gerekiyor." }, { status: 401 });
