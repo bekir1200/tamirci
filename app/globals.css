@@ -765,6 +765,13 @@ h2 { font-size: 18px; }
 .customer-event-list > div > time { color: #8a968e; font-size: 12px; }
 .customer-event-list > div > time { flex: 0 0 auto; }
 .repair-event-empty { padding: 5px 0; color: #839087; font-size: 14px; }
+/* Talep geçmişi: dikey, en yeni kayıt üstte, sade liste. */
+.customer-event-history > .customer-event-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 12px 13px; }
+.customer-event-history > .customer-event-list > div { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f0f3f0; }
+.customer-event-history > .customer-event-list > div:last-child { border-bottom: 0; }
+.customer-event-history > .customer-event-list .repair-event-copy p { font-size: 13px; }
+.customer-event-history > .customer-event-list .repair-event-copy small { font-size: 12px; overflow-wrap: anywhere; }
+.customer-event-history > .customer-event-list > div > time { white-space: nowrap; }
 .technician-event-history { margin: 18px 22px; }
 .technician-event-history summary { padding-right: 0; padding-left: 0; }
 .technician-event-history .customer-event-list { padding-right: 0; padding-left: 0; }
